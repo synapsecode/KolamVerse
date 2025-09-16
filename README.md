@@ -31,3 +31,5 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 2. (First-Time) pip install -r requirements.txt
 3. To Run the Turtle Version: python kolam_turtle.py
 4. To Run the Manim Version: manim -pql kolam_manim.py Kolam
+5. To Run the Kolam2CSV part: python kolam2csv.py --img ./sample1.jpeg --csv ./ab.csv
+6. To Run the Kolam Tracer: python kolamtrace.py --csv "./abc1.csv"
