@@ -14,8 +14,10 @@ import tkinter as tk
 from math import sqrt
 from lsystem import generate_lsystem_state
 
-def draw_kolam(t, state, step=20):
+def draw_kolam(t, state, step=20, angle=0):
     dot_positions = []
+
+    t.setheading(angle)
     
     # First, draw the entire pattern and collect dot positions
     for ch in state:
@@ -85,6 +87,7 @@ def make_canvas():
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--exact")
     ap.add_argument("--seed", default="FBFBFBFB")
     ap.add_argument('--depth', default=1)
     args = ap.parse_args()
@@ -92,9 +95,13 @@ def main():
     root, canvas = make_canvas()
     # L-system input
     # n = int(tk.simpledialog.askinteger("L-System Kolam", "Enter Level (2-5 recommended):", minvalue=1, maxvalue=6))
-    initial_state = args.seed
-    state = generate_lsystem_state(initial_state, args.depth)
-    draw_kolam(canvas, state, step=20)
+    if(args.exact):
+        state = args.exact
+    else:
+        initial_state = args.seed
+        state = generate_lsystem_state(initial_state, args.depth)
+    # draw_kolam(canvas, state, step=20)
+    draw_kolam(canvas, state, step=20, angle=45)
     canvas.getscreen().update()
     root.mainloop()
 
