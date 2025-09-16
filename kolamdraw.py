@@ -19,20 +19,20 @@ def draw_kolam(t, state, step=20, angle=0):
 
     t.setheading(angle)
     
-    # First, draw the entire pattern and collect dot positions
+    # Draw the entire pattern and collect dot positions
     for ch in state:
         if ch == 'F':
             t.color('green')
             t.pensize(3)
             t.fd(step)
+            
         elif ch == 'A':
             t.color('blue')
-            t.pensize(3) # Revert to the default line thickness
+            t.pensize(3)
             
             dot_positions.append(t.position())
             
-            # Increase the radius for the 'A' arc
-            t.circle(step * 1.5, 90) # Fatter arc with a larger radius
+            t.circle(step * 1.5, 90)  # Quarter-circle arc
             
         elif ch == 'B':
             t.color('red')
@@ -42,10 +42,20 @@ def draw_kolam(t, state, step=20, angle=0):
 
             I = step / sqrt(2)
             t.fd(I)
-            t.circle(I*0.7, 270)
+            t.circle(I * 0.7, 270)
             t.fd(I)
+            
+        elif ch == 'L':
+            t.left(45)  # Rotate left 45° without drawing
+            
+        elif ch == 'R':
+            t.right(45)  # Rotate right 45° without drawing
 
-    # Now, draw the dots at the collected positions
+        else:
+            # Unknown symbol → skip
+            pass
+
+    # Draw the dots at the collected positions
     unique_dot_positions = set(dot_positions)
     
     t.penup()
@@ -56,6 +66,7 @@ def draw_kolam(t, state, step=20, angle=0):
         t.dot(6, 'black')
     
     t.pendown()
+
 
 def make_canvas():
     root = tk.Tk()
@@ -101,7 +112,7 @@ def main():
         initial_state = args.seed
         state = generate_lsystem_state(initial_state, args.depth)
     # draw_kolam(canvas, state, step=20)
-    draw_kolam(canvas, state, step=20, angle=45)
+    draw_kolam(canvas, state, step=20, angle=0)
     canvas.getscreen().update()
     root.mainloop()
 
