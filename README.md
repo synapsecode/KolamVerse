@@ -18,13 +18,13 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 
 
 ## Kolam Rules
-Rule 1: Uniformly spacing of dots
-Rule 2: Smooth drawing line around the dots
-Rule 3: Symmetry in drawings
-Rule 4: Straight lines are drawn inclined at an angle of 45 degrees
-Rule 5: Drawing lines never trace back
-Rule 6: Arcs adjoining the dots
-Rule 7 : Kolam is completed when all points are enclosed by the drawing line
+- Rule 1: Uniformly spacing of dots
+- Rule 2: Smooth drawing line around the dots
+- Rule 3: Symmetry in drawings
+- Rule 4: Straight lines are drawn inclined at an angle of 45 degrees
+- Rule 5: Drawing lines never trace back
+- Rule 6: Arcs adjoining the dots
+- Rule 7 : Kolam is completed when all points are enclosed by the drawing line
 
 ## Execution
 1. (First-Time) python3 -m venv venv
