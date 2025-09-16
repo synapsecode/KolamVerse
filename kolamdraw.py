@@ -8,6 +8,7 @@ Forward I Units
 Draw an arc (circle (I, 270)) Forward I Units
 """
 
+import argparse
 import turtle
 import tkinter as tk
 from math import sqrt
@@ -83,11 +84,16 @@ def make_canvas():
     return root, t
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seed", default="FBFBFBFB")
+    ap.add_argument('--depth', default=1)
+    args = ap.parse_args()
+    
     root, canvas = make_canvas()
     # L-system input
-    n = int(tk.simpledialog.askinteger("L-System Kolam", "Enter Level (2-5 recommended):", minvalue=1, maxvalue=6))
-    initial_state = 'FBFBFBFB'
-    state = generate_lsystem_state(initial_state, n)
+    # n = int(tk.simpledialog.askinteger("L-System Kolam", "Enter Level (2-5 recommended):", minvalue=1, maxvalue=6))
+    initial_state = args.seed
+    state = generate_lsystem_state(initial_state, args.depth)
     draw_kolam(canvas, state, step=20)
     canvas.getscreen().update()
     root.mainloop()
