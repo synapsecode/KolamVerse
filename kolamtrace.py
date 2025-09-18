@@ -3,6 +3,7 @@ import time
 import numpy as np
 import pandas as pd
 import turtle as T
+import networkx as nx
 
 def load_all_points(csv_path: str):
     df = pd.read_csv(csv_path)
@@ -33,13 +34,31 @@ def normalize_strokes(strokes):
         offset += n
     return result
 
-def segments_intersect(p1, p2, q1, q2):
-    # Check if two segments (p1-p2 and q1-q2) intersect
-    def ccw(a, b, c):
-        return (c[1]-a[1]) * (b[0]-a[0]) > (b[1]-a[1]) * (c[0]-a[0])
-    return (ccw(p1, q1, q2) != ccw(p2, q1, q2)) and (ccw(p1, p2, q1) != ccw(p1, p2, q2))
+def snap_point(pt, tol=1e-1):
+    """Round point to nearest grid to avoid floating mismatch."""
+    return (round(pt[0] / tol) * tol, round(pt[1] / tol) * tol)
 
-def animate(strokes, step_delay=0.01, stride=1, bg="#2e5f3b"):
+def build_graph(strokes, tol=1e-1):
+    G = nx.MultiGraph()
+    for P in strokes:
+        for i in range(len(P)-1):
+            u = snap_point(P[i], tol)
+            v = snap_point(P[i+1], tol)
+            G.add_edge(u, v)
+    return G
+
+def compute_eulerian_path(strokes, tol=1e-1):
+    G = build_graph(strokes, tol)
+    if nx.is_eulerian(G):
+        path = list(nx.eulerian_circuit(G))
+    elif nx.has_eulerian_path(G):
+        path = list(nx.eulerian_path(G))
+    else:
+        print("Graph degrees:", dict(G.degree()))
+        raise ValueError("No Eulerian path or circuit possible (even after snapping)")
+    return path
+
+def animate_eulerian(path, step_delay=0.01, bg="#2e5f3b"):
     screen = T.Screen()
     screen.setup(width=900, height=900)
     screen.bgcolor(bg)
@@ -49,38 +68,17 @@ def animate(strokes, step_delay=0.01, stride=1, bg="#2e5f3b"):
     pen.speed(0)
     T.tracer(0, 0)
 
-    drawn_segments = []  # List of all previously drawn segments
+    # Move to start
+    start = path[0][0]
+    pen.up()
+    pen.goto(*start)
+    pen.down()
 
-    for P in strokes:
-        pen.up()
-        start = tuple(P[0])
-        pen.goto(*start)
-        pen.down()
-
-        for i in range(1, len(P)):
-            end = tuple(P[i])
-            overlap = False
-
-            # Check intersection with all previously drawn segments
-            for seg_start, seg_end in drawn_segments:
-                if segments_intersect(start, end, seg_start, seg_end):
-                    overlap = True
-                    break
-
-            if not overlap:
-                pen.goto(*end)
-                drawn_segments.append((start, end))
-                if i % stride == 0:
-                    T.update()
-                    if step_delay > 0:
-                        time.sleep(step_delay)
-                start = end
-            else:
-                # Skip drawing this segment, lift the pen
-                pen.up()
-                pen.goto(*end)
-                pen.down()
-                start = end
+    for (u, v) in path:
+        pen.goto(*v)
+        T.update()
+        if step_delay > 0:
+            time.sleep(step_delay)
 
     T.update()
     T.done()
@@ -89,9 +87,11 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
     ap.add_argument("--delay", type=float, default=0)
-    ap.add_argument("--stride", type=int, default=2)
+    ap.add_argument("--tol", type=float, default=1e-1, help="Snapping tolerance")
     args = ap.parse_args()
 
     strokes = load_all_points(args.csv)
     strokes = normalize_strokes(strokes)
-    animate(strokes, step_delay=args.delay, stride=args.stride)
+
+    path = compute_eulerian_path(strokes, tol=args.tol)
+    animate_eulerian(path, step_delay=args.delay)
