@@ -1,3 +1,4 @@
+import argparse
 import itertools
 import math
 
@@ -67,10 +68,7 @@ def generate_valid_seeds(length):
             valid_seeds.append(full_seed)
     return valid_seeds
 
-def main():
-    print("Rotational Symmetry Kolam Seed Generator (Fully Validated)")
-    length = int(input("Enter total length (even, e.g., 8, 12, 16): "))
-    
+def main(length):
     seeds = generate_valid_seeds(length)
     
     if seeds:
@@ -81,4 +79,7 @@ def main():
         print("No valid seeds found.")
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--length', default=8)
+    args = ap.parse_args()
+    main(int(args.length))

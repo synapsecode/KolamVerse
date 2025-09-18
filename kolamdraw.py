@@ -110,7 +110,7 @@ def main():
         state = args.exact
     else:
         initial_state = args.seed
-        state = generate_lsystem_state(initial_state, args.depth)
+        state = generate_lsystem_state(initial_state, int(args.depth))
     # draw_kolam(canvas, state, step=20)
     draw_kolam(canvas, state, step=20, angle=0)
     canvas.getscreen().update()
