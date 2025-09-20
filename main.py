@@ -10,9 +10,18 @@ app = FastAPI()
 STATIC_DIR = "static"
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+
 @app.get("/", response_class=HTMLResponse)
-def serve_index():
+def index():
     index_path = os.path.join(STATIC_DIR, "index.html")
+    return FileResponse(index_path)
+
+
+#  ------------------- KolamTrace ---------------------
+
+@app.get("/kolamtrace", response_class=HTMLResponse)
+def app_kolamtrace():
+    index_path = os.path.join(STATIC_DIR, "kolamtrace.html")
     return FileResponse(index_path)
 
 @app.post("/upload_kolam")
@@ -49,3 +58,11 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
         animate_eulerian_stream(path, step_delay=0.005),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
+
+
+# ---------------- KolamDraw -------------------
+
+@app.get("/kolamdraw", response_class=HTMLResponse)
+def app_kolamdraw():
+    index_path = os.path.join(STATIC_DIR, "kolamdraw.html")
+    return FileResponse(index_path)

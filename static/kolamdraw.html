@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KolamDraw</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+        }
+
+        .left-pane {
+            width: 35%;
+            background: #f9fafb;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-pane h2 {
+            margin-bottom: 20px;
+            color: #2d3e50;
+            text-align: center;
+        }
+
+        textarea {
+            resize: none;
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            min-height: 120px;
+        }
+
+        button {
+            padding: 12px;
+            background: #2e5f3b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #23482d;
+        }
+
+        .right-pane {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #eef2f7;
+        }
+
+        .right-pane img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            border: 2px solid #ccc;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="left-pane">
+        <h2>KolamDraw</h2>
+        <textarea id="prompt" placeholder="Enter your prompt here..."></textarea>
+        <button onclick="generateKolam()">Generate</button>
+    </div>
+    <div class="right-pane">
+        <img id="kolamImage" src="" alt="Generated Kolam will appear here">
+    </div>
+
+    <script>
+        async function generateKolam() {
+            const prompt = document.getElementById("prompt").value.trim();
+            if (!prompt) {
+                alert("Please enter a prompt first.");
+                return;
+            }
+
+            // Call backend API
+            const res = await fetch("/generate_kolam", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt })
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            // Set image source to generated file
+            document.getElementById("kolamImage").src = data.image_url;
+        }
+    </script>
+</body>
+
+</html>
