@@ -63,15 +63,6 @@ def compute_eulerian_path(strokes, tol=1e-1):
 
 # ------------------------ Turtle Part --------------------------------
 
-def turtle_frame_capture(screen):
-    """Capture current turtle canvas → PNG bytes"""
-    ps_file = "frame.ps"
-    screen.getcanvas().postscript(file=ps_file)
-    img = Image.open(ps_file)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-
 async def animate_eulerian_stream(path, step_delay=0.05, bg=(46, 95, 59)):
     """Async MJPEG streamer for Eulerian path."""
     size = 900

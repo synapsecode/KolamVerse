@@ -76,7 +76,7 @@
 <body>
     <div class="left-pane">
         <h2>KolamDraw</h2>
-        <textarea id="prompt" placeholder="Enter your prompt here..."></textarea>
+        <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
         <button onclick="generateKolam()">Generate</button>
     </div>
     <div class="right-pane">
@@ -84,28 +84,21 @@
     </div>
 
     <script>
-        async function generateKolam() {
-            const prompt = document.getElementById("prompt").value.trim();
-            if (!prompt) {
-                alert("Please enter a prompt first.");
+        function generateKolam() {
+            const seed = document.getElementById("prompt").value.trim();
+            if (!seed) {
+                alert("Please enter a seed first.");
                 return;
             }
 
-            // Call backend API
-            const res = await fetch("/generate_kolam", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt })
-            });
+            // Add timestamp so browser doesn’t cache old image
+            const ts = Date.now();
 
-            const data = await res.json();
-            if (data.error) {
-                alert("Error: " + data.error);
-                return;
-            }
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
 
-            // Set image source to generated file
-            document.getElementById("kolamImage").src = data.image_url;
+            // Update image src
+            document.getElementById("kolamImage").src = url;
         }
     </script>
 </body>

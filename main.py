@@ -1,9 +1,10 @@
 import os
 import shutil
-from fastapi import FastAPI, File, UploadFile, Query
+from fastapi import FastAPI, File, Response, UploadFile, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from kolam2csv import image_to_kolam_csv
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
+from kolamdrawv2 import draw_kolam_from_seed
 
 app = FastAPI()
 
@@ -66,3 +67,8 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
 def app_kolamdraw():
     index_path = os.path.join(STATIC_DIR, "kolamdraw.html")
     return FileResponse(index_path)
+
+@app.get("/drawkolam")
+def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
+    img_bytes = draw_kolam_from_seed(seed=seed, depth=depth)
+    return Response(content=img_bytes, media_type="image/png")
