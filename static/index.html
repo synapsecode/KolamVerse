@@ -1,0 +1,42 @@
+<form id="uploadForm">
+    <input type="file" id="fileInput" name="file" accept="image/*" required>
+    <button type="submit">Upload & Animate</button>
+</form>
+
+<div class="preview">
+    <img id="stream" alt="Kolam animation will appear here">
+</div>
+
+<script>
+    const form = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const streamImg = document.getElementById("stream");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const file = fileInput.files[0];
+        if (!file) {
+            alert("Please select a file first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Step 1: Upload the file
+        const res = await fetch("/upload_kolam", {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            alert("Error: " + data.error);
+            return;
+        }
+
+        // Step 2: Set the <img> source to the streaming endpoint
+        streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(data.csv_file)}`;
+    });
+</script>
