@@ -41,6 +41,9 @@ def upload_kolam(file: UploadFile = File(...)):
     csv_path = os.path.join(STATIC_DIR, csv_filename)
     image_to_kolam_csv(file_path, csv_path)
 
+    # Delete the Image
+    os.remove(file_path)
+
     return {"csv_file": csv_filename}
 
 
@@ -54,6 +57,9 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
     strokes = load_all_points(csv_path)
     strokes = normalize_strokes(strokes)
     path = compute_eulerian_path(strokes, tol=1e-1)
+
+    # Delete the CSV
+    os.remove(csv_path)
 
     return StreamingResponse(
         animate_eulerian_stream(path, step_delay=0.005),
