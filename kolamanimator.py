@@ -126,7 +126,7 @@ async def animate_eulerian_stream(path, step_delay=0.05, bg=(46, 95, 59)):
 
     # Draw dots first (before animation)
     for (cx, cy) in dots:
-        cv2.circle(canvas, (cx, cy), 8, (180, 100, 255), -1)
+        cv2.circle(canvas, (cx, cy), 8, (255, 191, 0), -1)
 
     # Animate path
     for (u, v) in path:
