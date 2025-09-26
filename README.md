@@ -37,11 +37,7 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 
 Review Tips:
 
-1.⁠ ⁠find a way to superimpose dots on the kolam (basically dots are important to kolam so find a way how to incliude them)
 2.⁠ ⁠Make a Live Simulator along with the GenAI: needs to allow control of repititions mirrors etc
-9.⁠ ⁠Try to make the animated steps clickable left and right to see before or after step
-
-
 
 3.⁠ ⁠⁠implement the image to natural language (user pus kolam and they get a design description)
 4.⁠ ⁠⁠implement the prompt to seed

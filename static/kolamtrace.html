@@ -4,16 +4,18 @@
 </form>
 
 <div class="preview-container">
-    <!-- Selected picture -->
     <div>
         <h3>Selected Picture</h3>
         <img id="selected" alt="Your uploaded picture will appear here">
     </div>
 
-    <!-- Animation -->
     <div>
         <h3>Kolam Animation</h3>
-        <img id="stream" alt="Kolam animation will appear here">
+        <canvas id="animationCanvas" width="400" height="400"></canvas>
+        <div style="margin-top: 10px;">
+            <button id="back20" disabled>« 20 Frames</button>
+            <button id="forward20" disabled>20 Frames »</button>
+        </div>
     </div>
 </div>
 
@@ -24,47 +26,111 @@
         margin-top: 20px;
     }
 
-    .preview-container img {
+    .preview-container>div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .preview-container img,
+    .preview-container canvas {
         max-width: 400px;
         border: 1px solid #ccc;
         border-radius: 8px;
+    }
+
+    button {
+        margin: 2px;
     }
 </style>
 
 <script>
     const form = document.getElementById("uploadForm");
     const fileInput = document.getElementById("fileInput");
-    const streamImg = document.getElementById("stream");
     const selectedImg = document.getElementById("selected");
+    const canvas = document.getElementById("animationCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const back20Btn = document.getElementById("back20");
+    const forward20Btn = document.getElementById("forward20");
+
+    let frames = [];
+    let currentFrame = 0;
+    let liveInterval = null;
+    let navImg = new Image(); // single img for navigation
+
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (file) selectedImg.src = URL.createObjectURL(file);
+    });
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const file = fileInput.files[0];
-        if (!file) {
-            alert("Please select a file first.");
-            return;
-        }
+        if (!file) return alert("Select a file.");
 
-        // Preview selected picture immediately
+        // Reset frontend state
+        frames = [];
+        currentFrame = 0;
+        back20Btn.disabled = true;
+        forward20Btn.disabled = true;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         selectedImg.src = URL.createObjectURL(file);
 
         const formData = new FormData();
         formData.append("file", file);
 
-        // Step 1: Upload the file
-        const res = await fetch("/upload_kolam", {
-            method: "POST",
-            body: formData
-        });
+        const res = await fetch("/upload_kolam", { method: "POST", body: formData });
         const data = await res.json();
+        if (data.error) return alert("Error: " + data.error);
 
-        if (data.error) {
-            alert("Error: " + data.error);
-            return;
-        }
+        // Clear previous live MJPEG
+        if (liveInterval) clearInterval(liveInterval);
 
-        // Step 2: Set the <img> source to the streaming endpoint
+        // Show live MJPEG
+        const streamImg = new Image();
         streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(data.csv_file)}`;
+        streamImg.crossOrigin = "anonymous";
+
+        liveInterval = setInterval(() => {
+            try { ctx.drawImage(streamImg, 0, 0, canvas.width, canvas.height); }
+            catch (e) { }
+        }, 30);
+
+        // Poll for snapshots every 4s
+        const pollSnapshots = async () => {
+            try {
+                const snapRes = await fetch(`/kolam_snapshots`);
+                if (!snapRes.ok) { setTimeout(pollSnapshots, 4000); return; }
+                const snapData = await snapRes.json();
+
+                frames = snapData.frames;
+                currentFrame = frames.length - 1; // freeze on last snapshot
+
+                clearInterval(liveInterval); // stop live MJPEG
+
+                // Draw last snapshot
+                navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+                navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
+
+                // Enable 20-frame buttons
+                back20Btn.disabled = false;
+                forward20Btn.disabled = false;
+            } catch (err) {
+                setTimeout(pollSnapshots, 4000); // retry on error
+            }
+        };
+        pollSnapshots();
     });
+
+    function updateFrame(idx) {
+        if (frames.length === 0) return;
+        currentFrame = Math.max(0, Math.min(idx, frames.length - 1));
+        navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+        navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
+    }
+
+    back20Btn.addEventListener("click", () => updateFrame(currentFrame - 20));
+    forward20Btn.addEventListener("click", () => updateFrame(currentFrame + 20));
 </script>

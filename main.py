@@ -1,12 +1,15 @@
+import base64
 import os
 import shutil
 from fastapi import FastAPI, File, Response, UploadFile, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from kolam2csv import image_to_kolam_csv
+from kolam_frame_manger import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
 from kolamdrawv2 import draw_kolam_from_seed
 
 app = FastAPI()
+kolam_frame_manager = KolamFrameManager()
 
 STATIC_DIR = "static"
 os.makedirs(STATIC_DIR, exist_ok=True)
@@ -26,10 +29,12 @@ def app_kolamtrace():
     return FileResponse(index_path)
 
 @app.post("/upload_kolam")
-def upload_kolam(file: UploadFile = File(...)):
+async def upload_kolam(file: UploadFile = File(...)):
     # Check content type
     if not file.content_type.startswith("image/"):
         return JSONResponse({"error": "Only image files are allowed"}, status_code=400)
+
+    await kolam_frame_manager.clear()
 
     # Save uploaded file
     file_path = os.path.join(STATIC_DIR, file.filename)
@@ -53,6 +58,8 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
 
     if not os.path.exists(csv_path):
         return JSONResponse({"error": "CSV file not found"}, status_code=404)
+    
+    kolam_frame_manager.clear()
 
     strokes = load_all_points(csv_path)
     strokes = normalize_strokes(strokes)
@@ -62,10 +69,23 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
     os.remove(csv_path)
 
     return StreamingResponse(
-        animate_eulerian_stream(path, step_delay=0.005),
+        animate_eulerian_stream(path, kolam_frame_manager, step_delay=0.005),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
+@app.get("/kolam_snapshots")
+async def kolam_snapshots():
+    snapshots = await kolam_frame_manager.get_frames()
+    
+    if not snapshots:
+        return JSONResponse({"error": "Snapshots not ready yet"}, status_code=404)
+
+    frames_b64 = [base64.b64encode(f).decode("utf-8") for f in snapshots]
+
+    return JSONResponse(
+        {"frames": frames_b64},
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
+    )
 
 # ---------------- KolamDraw -------------------
 
