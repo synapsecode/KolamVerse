@@ -33,3 +33,19 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 4. To Run the Manim Version: manim -pql kolam_manim.py Kolam
 5. To Run the Kolam2CSV part: python kolam2csv.py --img ./sample1.jpeg --csv ./ab.csv
 6. To Run the Kolam Tracer: python kolamtrace.py --csv "./abc1.csv"
+
+
+Review Tips:
+
+1.⁠ ⁠find a way to superimpose dots on the kolam (basically dots are important to kolam so find a way how to incliude them)
+2.⁠ ⁠Make a Live Simulator along with the GenAI: needs to allow control of repititions mirrors etc
+9.⁠ ⁠Try to make the animated steps clickable left and right to see before or after step
+
+
+
+3.⁠ ⁠⁠implement the image to natural language (user pus kolam and they get a design description)
+4.⁠ ⁠⁠implement the prompt to seed
+5.⁠ ⁠⁠implement the splines part into the webview itself and dont use dots tery to make those dots into a mathematical curve
+6.⁠ ⁠improve frontend
+7.⁠ ⁠⁠landing page => add kolam rules, add how to use etc etc (basically proper landing page)
+8.⁠ ⁠⁠add more screenshorts and links to ppt

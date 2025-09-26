@@ -63,12 +63,10 @@ def compute_eulerian_path(strokes, tol=1e-1):
 
 # ------------------------ Turtle Part --------------------------------
 
-async def animate_eulerian_stream(path, step_delay=0.05, bg=(46, 95, 59)):
-    """Async MJPEG streamer for Eulerian path."""
-    size = 900
+def compute_dot_positions(path, size=900, bg=(46, 95, 59)):
+    """Compute valid dot positions before animation."""
     canvas = np.full((size, size, 3), bg, dtype=np.uint8)
 
-    # Normalize coords
     xs = [p[0] for edge in path for p in edge]
     ys = [p[1] for edge in path for p in edge]
     min_x, max_x = min(xs), max(xs)
@@ -80,6 +78,57 @@ async def animate_eulerian_stream(path, step_delay=0.05, bg=(46, 95, 59)):
         y = int((pt[1] - min_y) * scale + size * 0.05)
         return (x, size - y)
 
+    # Draw full path once (in memory)
+    for (u, v) in path:
+        cv2.line(canvas, to_px(u), to_px(v), (255, 255, 255), 3)
+
+    # Detect enclosed regions
+    gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+    areas = [cv2.contourArea(cnt) for cnt in contours if cv2.contourArea(cnt) > 10]
+    if not areas:
+        return []
+
+    median_area = np.median(areas)
+
+    dots = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if 0.3 * median_area < area < 2.5 * median_area:
+            M = cv2.moments(cnt)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                dots.append((cx, cy))
+    return dots
+
+
+async def animate_eulerian_stream(path, step_delay=0.05, bg=(46, 95, 59)):
+    """Async MJPEG streamer for Eulerian path with precomputed dots."""
+    size = 900
+    canvas = np.full((size, size, 3), bg, dtype=np.uint8)
+
+    xs = [p[0] for edge in path for p in edge]
+    ys = [p[1] for edge in path for p in edge]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    scale = min(size / (max_x - min_x + 1), size / (max_y - min_y + 1)) * 0.9
+
+    def to_px(pt):
+        x = int((pt[0] - min_x) * scale + size * 0.05)
+        y = int((pt[1] - min_y) * scale + size * 0.05)
+        return (x, size - y)
+
+    # --- Precompute valid dot positions ---
+    dots = compute_dot_positions(path, size=size, bg=bg)
+
+    # Draw dots first (before animation)
+    for (cx, cy) in dots:
+        cv2.circle(canvas, (cx, cy), 8, (180, 100, 255), -1)
+
+    # Animate path
     for (u, v) in path:
         cv2.line(canvas, to_px(u), to_px(v), (255, 255, 255), 3)
 
