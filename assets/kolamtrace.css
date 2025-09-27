@@ -1,0 +1,242 @@
+:root {
+    --accent: #28a956;
+    --accent-dark: #208a3d;
+    --accent-fade: #111316;
+    --bg: #181d22;
+    --shadow: 0 2px 24px rgba(0, 0, 0, 0.28);
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #181b20;
+    color: #e0e6ed;
+    min-height: 100vh;
+}
+
+.trace-bar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: #22262c;
+    padding: 12px 48px;
+    border-bottom: 1.5px solid #232a33;
+}
+
+.trace-bar .brand {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+.trace-bar .brand h1 a {
+    text-decoration: none;
+    color: #e0e6ed;
+}
+
+.trace-bar .brand svg {
+    height: 42px;
+    width: 42px;
+}
+
+.trace-bar .section-title {
+    color: #78f5c6;
+}
+
+/* Main container */
+.main-flex {
+    max-width: 1200px;
+    background: #23262e;
+    margin: 40px auto 0 auto;
+    border-radius: 34px;
+    box-shadow: 0 2px 40px rgba(20, 32, 44, 0.15);
+    display: flex;
+    min-height: 560px;
+    overflow: hidden;
+}
+
+/* Upload area */
+.upload-side {
+    min-width: 315px;
+    max-width: 360px;
+    background: #191e24;
+    border-right: 1.5px solid #21252d;
+    padding: 50px 28px 30px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upload-side h2 {
+    color: #78f5c6;
+}
+
+.img-slot {
+    width: 220px;
+    height: 220px;
+    background: #23262e;
+    border: 2px dashed #79e3b7;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.img-slot img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 10px;
+}
+
+.img-slot .slot-placeholder {
+    color: #7a8ca2;
+}
+
+.upload-label {
+    background: linear-gradient(100deg, #29a459 60%, #63d8a7 100%);
+    color: #14312c;
+    padding: 12px 25px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(24, 97, 76, 0.18);
+    cursor: pointer;
+}
+
+.upload-label:active,
+.upload-label:focus {
+    background: #146b39;
+    color: #cafff0;
+}
+
+input[type='file'] {
+    display: none;
+}
+
+.info {
+    color: #67eeb5;
+}
+
+.anim-panel {
+    flex: 1 1 640px;
+    padding: 54px 54px 20px 54px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 320px;
+}
+
+.anim-panel h2 {
+    color: #78f5c6;
+}
+
+.anim-area {
+    width: 410px;
+    height: 370px;
+    background: #23262e;
+    border-radius: 22px;
+    box-shadow: 0 4px 28px rgba(8, 16, 28, 0.14);
+    position: relative;
+}
+
+.anim-placeholder {
+    color: #4e6074;
+    text-align: center;
+    padding: 40px;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+#animationCanvas {
+    background: transparent;
+    border-radius: 22px;
+    box-shadow: 0 4px 18px rgba(34, 211, 138, 0.05);
+}
+
+.actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.actions button {
+    background: linear-gradient(100deg, #22693e 60%, #2eb495 100%);
+    color: #e2f6eb;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 8px 16px;
+}
+
+.actions button:disabled {
+    background: #20272b;
+    color: #48655a;
+    cursor: not-allowed;
+}
+
+/* Responsive tweaks */
+@media (max-width: 1000px) {
+    .main-flex {
+        flex-direction: column;
+        min-height: unset;
+    }
+
+    .upload-side,
+    .anim-panel {
+        min-width: unset;
+        max-width: unset;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #23262e;
+    }
+
+    .anim-panel {
+        padding: 24px 28px 20px 28px;
+    }
+
+    .img-slot {
+        width: 100%;
+        height: auto;
+        max-height: 280px;
+    }
+
+    #animationCanvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .main-flex {
+        border-radius: 0;
+    }
+
+    .section-title {
+        display: none;
+    }
+
+    .anim-area {
+        width: 310px;
+        height: 340px;
+    }
+
+    .upload-side,
+    .anim-panel {
+        padding: 12px 16px;
+    }
+
+    .upload-side h2,
+    .anim-panel h2 {
+        font-size: 1.2rem;
+    }
+}
