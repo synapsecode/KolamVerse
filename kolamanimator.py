@@ -3,7 +3,6 @@ import io
 import cv2
 import numpy as np
 import pandas as pd
-import turtle as T
 import networkx as nx
 from PIL import Image
 
