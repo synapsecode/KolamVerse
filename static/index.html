@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
     <title>KolamVerse</title>
     <style>
       :root {
-        --color-primary: #1f5f45; /* dark green */
-        --color-accent: #4fb08c; /* light green */
-        --color-bg-light: #f4f9f7; /* very light greenish background */
+        --color-primary: #33ff9b; /* neon green */
+        --color-accent: #277550; /* dark green */
+        --color-bg-dark: #0d1117;
+        --color-bg-light: #161b22;
+        --color-text-light: #d4f7dc;
+        --color-text-dark: #b7d2bd;
       }
 
       html {
@@ -18,26 +22,29 @@
       body {
         margin: 0;
         font-family: 'Segoe UI', Arial, sans-serif;
-        color: #333;
+        color: var(--color-text-light);
         line-height: 1.6;
-        background-color: #ffffff;
+        background-color: var(--color-bg-dark);
         scroll-behavior: smooth;
       }
 
       a {
         text-decoration: none;
+        color: var(--color-primary);
       }
 
-      /* Hero Section */
       .kolam-svg {
         width: 96px;
         animation: rotateKolam 16s linear infinite;
+        stroke: var(--color-primary);
+        fill: none;
       }
+
       .hero {
         padding: 60px 20px;
-        background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
+        background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg-dark) 100%);
         text-align: center;
-        color: #fff;
+        color: var(--color-text-light);
         position: relative;
         overflow: hidden;
       }
@@ -47,6 +54,7 @@
         margin-bottom: 20px;
         margin-top: 20px;
         animation: fadeDown 1s ease forwards;
+        color: var(--color-primary);
       }
 
       .hero p {
@@ -56,57 +64,62 @@
         margin-left: auto;
         margin-right: auto;
         animation: fadeDown 1.3s ease forwards;
+        color: var(--color-text-dark);
       }
 
       .hero .hero-btn {
-        background: #fff;
-        color: var(--color-primary, #2e5f3b);
+        background: var(--color-primary);
+        color: var(--color-bg-dark);
         padding: 14px 32px;
         border-radius: 14px;
         font-size: 1.12rem;
         margin-right: 12px;
+        margin-bottom: 12px;
         display: inline-block;
         font-weight: 700;
-        box-shadow: 0 3px 8px rgba(46, 95, 59, 0.13);
+        box-shadow: 0 3px 8px rgba(39, 117, 80, 0.6);
         transition: transform 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
         animation: fadeUp 1.6s ease forwards;
         cursor: pointer;
       }
+
       .hero .hero-btn:hover,
       .hero .hero-btn:focus {
-        color: #1f3e2c;
+        color: var(--color-bg-light);
         transform: scale(1.07);
-        box-shadow: 0 8px 24px rgba(46, 95, 59, 0.3);
+        box-shadow: 0 8px 24px rgba(39, 117, 80, 0.9);
         outline: none;
       }
 
       .hero .link-button {
         text-decoration: none;
         padding: 13px 28px;
-        background: linear-gradient(100deg, #2e5f3b 60%, #3db88e 100%);
-        color: #fff;
+        margin-bottom: 12px;
+        background: linear-gradient(100deg, var(--color-accent) 60%, var(--color-primary) 100%);
+        color: white;
         display: inline-block;
         border-radius: 12px;
         font-weight: 600;
         font-size: 1.1rem;
-        box-shadow: 0 3px 12px rgba(46, 95, 59, 0.15);
+        box-shadow: 0 3px 12px rgba(39, 117, 80, 0.75);
         border: none;
         margin-right: 8px;
         transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
         animation: fadeUp 1.6s ease forwards;
         cursor: pointer;
       }
+
       .hero .link-button:hover,
       .hero .link-button:focus {
-        background: linear-gradient(100deg, #145837 60%, #42996b 100%);
+        background: linear-gradient(100deg, #196639 60%, #2cc26e 100%);
         transform: scale(1.06);
-        box-shadow: 0 7px 22px rgba(26, 50, 34, 0.35);
+        box-shadow: 0 7px 22px rgba(30, 110, 68, 1);
         outline: none;
       }
 
-      /* Section template */
       .section {
         padding: 80px 20px;
+        background: var(--color-bg-dark);
       }
 
       .section.alt {
@@ -123,7 +136,9 @@
         opacity: 0;
         transform: translateY(50px);
         transition: all 0.8s ease;
+        color: var(--color-text-light);
       }
+
       .section-content.visible {
         opacity: 1;
         transform: translateY(0);
@@ -138,7 +153,7 @@
       .section-content .text p,
       .section-content .text ul {
         font-size: 1.1rem;
-        color: #333;
+        color: var(--color-text-dark);
       }
 
       .section-content .text ul {
@@ -151,42 +166,14 @@
         display: block;
         margin: 0 auto;
         transition: transform 0.4s ease;
+        border-radius: 6px;
       }
+
       .section-content .image img:hover {
         transform: scale(1.05) rotate(-2deg);
+        filter: brightness(1.1);
       }
 
-      /* .info-buttons {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-      }
-
-      .info-buttons a {
-        padding: 12px 22px;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: transform 0.3s, box-shadow 0.3s;
-      }
-
-      .info-buttons a.primary {
-        background: var(--color-accent);
-        color: #fff;
-      }
-
-      .info-buttons a.secondary {
-        background: var(--color-primary);
-        color: #fff;
-      }
-
-      .info-buttons a:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      } */
       .links {
         display: flex;
         gap: 20px;
@@ -197,18 +184,27 @@
       .link-button {
         text-decoration: none;
         padding: 13px 28px;
-        background: linear-gradient(100deg, #2e5f3b 60%, #3db88e 100%);
-        color: #fff;
+        background: linear-gradient(100deg, var(--color-accent) 60%, var(--color-primary) 100%);
+        color: white;
         border-radius: 10px;
         font-weight: 600;
         font-size: 1.09rem;
-        box-shadow: 0 3px 12px rgba(46, 95, 59, 0.11);
+        box-shadow: 0 3px 12px rgba(39, 117, 80, 0.25);
         border: none;
         transition: all 0.19s;
       }
+
       .link-button:hover {
-        background: linear-gradient(100deg, #145837 60%, #42996b 100%);
+        background: linear-gradient(100deg, #196639 60%, #2cc26e 100%);
         transform: scale(1.07) translateY(-2px);
+      }
+
+      footer {
+        padding: 40px 20px;
+        text-align: center;
+        background: var(--color-accent);
+        color: var(--color-bg-dark);
+        font-size: 0.9rem;
       }
 
       /* Animations */
@@ -233,7 +229,6 @@
         }
       }
 
-      /* Responsive */
       @media (max-width: 900px) {
         .section-content {
           grid-template-columns: 1fr;
@@ -242,14 +237,6 @@
         .section-content .image {
           order: -1;
         }
-      }
-
-      footer {
-        padding: 40px 20px;
-        text-align: center;
-        background: var(--color-primary);
-        color: #fff;
-        font-size: 0.9rem;
       }
     </style>
   </head>
@@ -311,7 +298,7 @@
       </div>
     </section>
 
-    <footer>KolamVerse · September 2025 · Made with ❤️ by Team LiveLifeLarge</footer>
+    <footer>KolamVerse · SIH 2025 · Made with ❤️ by Team LiveLifeLarge</footer>
 
     <script>
       // reveal sections on scroll

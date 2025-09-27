@@ -3,136 +3,114 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KolamVerse – KolamTrace</title>
+    <title>KolamTrace | KolamVerse</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --accent: #309970;
-        --accent-dark: #246149;
-        --accent-fade: #b4f1d6;
-        --bg: #f7faf9;
-        --shadow: 0 2px 24px rgba(70, 110, 89, 0.09);
+        --accent: #28a956;
+        --accent-dark: #208a3d;
+        --accent-fade: #111316;
+        --bg: #181d22;
+        --shadow: 0 2px 24px rgba(0, 0, 0, 0.28);
       }
       body {
         margin: 0;
         font-family: 'Inter', 'Segoe UI', sans-serif;
-        background: linear-gradient(115deg, #e8f6f1 0%, #f3f8fa 100%);
-        color: #213531;
+        background: #181b20;
+        color: #e0e6ed;
         min-height: 100vh;
       }
       .trace-bar {
         display: flex;
         align-items: center;
         gap: 18px;
-        background: rgba(48, 153, 112, 0.13);
-        padding: 30px 48px 18px 48px;
-        border-bottom: 1.5px solid #e9f0ea;
+        background: #22262c;
+        padding: 12px 48px;
+        border-bottom: 1.5px solid #232a33;
       }
       .trace-bar .brand {
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 10px;
+        gap: 4px;
+      }
+      .trace-bar .brand h1 a {
+        text-decoration: none;
+        color: #e0e6ed;
       }
       .trace-bar .brand svg {
-        width: 48px;
-        height: 48px;
-        /* background: #fff; */
-        border-radius: 50%;
-      }
-      .trace-bar h1 {
-        font-size: 2rem;
-        margin: 0;
-        font-weight: 700;
-        color: #227954;
-        letter-spacing: 1.1px;
+        height: 42px;
+        width: 42px;
       }
       .trace-bar .section-title {
-        font-size: 1.26rem;
-        margin-left: 22px;
-        margin-top: 0;
-        color: #369178;
-        font-weight: 600;
+        color: #78f5c6;
       }
+      /* Main container */
       .main-flex {
         max-width: 1200px;
-        background: #fff;
+        background: #23262e;
         margin: 40px auto 0 auto;
         border-radius: 34px;
-        box-shadow: 0 2px 40px rgba(46, 95, 59, 0.1);
+        box-shadow: 0 2px 40px rgba(20, 32, 44, 0.15);
         display: flex;
         min-height: 560px;
         overflow: hidden;
       }
+      /* Upload area */
       .upload-side {
         min-width: 315px;
         max-width: 360px;
-        background: linear-gradient(120deg, #f6f9f7, #eaf7f1 100%);
-        border-right: 1.5px solid #e0e9e5;
+        background: #191e24;
+        border-right: 1.5px solid #21252d;
         padding: 50px 28px 30px 28px;
         display: flex;
         flex-direction: column;
         align-items: center;
       }
       .upload-side h2 {
-        font-size: 1.25rem;
-        margin-bottom: 21px;
-        font-weight: 700;
-        color: #236e54;
+        color: #78f5c6;
       }
       .img-slot {
         width: 220px;
         height: 220px;
-        background: #fff;
-        border: 2px dashed #82e1c1;
+        background: #23262e;
+        border: 2px dashed #79e3b7;
+        border-radius: 16px;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: 16px;
         margin-bottom: 18px;
         position: relative;
         overflow: hidden;
-        transition: background 0.3s ease, border-color 0.3s ease;
       }
       .img-slot img {
         max-width: 100%;
         max-height: 180px;
         border-radius: 10px;
-        display: block;
       }
       .img-slot .slot-placeholder {
-        text-align: center;
-        color: #b3c5c8;
-        font-size: 1.06rem;
-        font-style: italic;
+        color: #7a8ca2;
       }
       .upload-label {
-        background: linear-gradient(100deg, #2e5f3b 60%, #51ccb1 100%);
-        color: #fff;
+        background: linear-gradient(100deg, #29a459 60%, #63d8a7 100%);
+        color: #14312c;
         padding: 12px 25px;
+        margin-bottom: 8px;
         border-radius: 12px;
         font-weight: 600;
-        font-size: 1.09rem;
-        cursor: pointer;
-        transition: background 0.18s, box-shadow 0.18s;
-        margin-bottom: 7px;
-        box-shadow: 0 2px 10px rgba(40, 120, 56, 0.09);
-        display: inline-block;
-        outline: none;
-        user-select: none;
+        box-shadow: 0 2px 10px rgba(24, 97, 76, 0.18);
       }
       .upload-label:active,
       .upload-label:focus {
-        background: #227954;
-        transform: scale(0.98);
+        background: #146b39;
+        color: #cafff0;
       }
       input[type='file'] {
         display: none;
       }
       .info {
-        font-size: 0.97rem;
-        color: #459a7a;
-        margin-top: 8px;
-        text-align: center;
+        color: #67eeb5;
       }
       .anim-panel {
         flex: 1 1 640px;
@@ -143,78 +121,38 @@
         min-width: 320px;
       }
       .anim-panel h2 {
-        font-size: 1.22rem;
-        font-weight: 700;
-        margin-bottom: 16px;
-        color: #2e7c5c;
+        color: #78f5c6;
       }
       .anim-area {
         width: 410px;
         height: 370px;
-        background: linear-gradient(120deg, #f7faf9 0%, #e8f9f2 96%);
+        background: #23262e;
         border-radius: 22px;
-        box-shadow: 0 4px 28px rgba(25, 69, 58, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 22px;
-        position: relative;
+        box-shadow: 0 4px 28px rgba(8, 16, 28, 0.14);
       }
       .anim-placeholder {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        color: #b7c7bc;
-        font-size: 1.13rem;
-        z-index: 1;
-        pointer-events: none;
+        color: #4e6074;
       }
       #animationCanvas {
-        position: relative;
-        z-index: 2;
-        width: 410px !important;
-        height: 370px !important;
         background: transparent;
         border-radius: 22px;
-        box-shadow: 0 4px 18px rgba(25, 69, 58, 0.07);
-      }
-      .actions {
-        margin-top: 2px;
-        display: flex;
-        gap: 22px;
+        box-shadow: 0 4px 18px rgba(34, 211, 138, 0.05);
       }
       .actions button {
-        background: linear-gradient(100deg, #2e5f3b 60%, #51ccb1 100%);
-        color: #fff;
+        background: linear-gradient(100deg, #22693e 60%, #2eb495 100%);
+        color: #e2f6eb;
         font-weight: 700;
         font-size: 1.1rem;
-        padding: 13px 29px;
         border-radius: 12px;
         border: none;
         outline: none;
         cursor: pointer;
-        transition: background 0.2s, box-shadow 0.2s, transform 0.18s;
-        box-shadow: 0 2px 14px rgba(30, 95, 59, 0.09);
       }
       .actions button:disabled {
-        opacity: 0.7;
-        background: #dcf7ed;
-        color: #c5e8dd;
-        cursor: not-allowed;
+        background: #20272b;
+        color: #48655a;
       }
-      .actions button:active,
-      .actions button:focus {
-        background: #267d5b;
-        box-shadow: 0 1px 6px rgba(48, 153, 112, 0.15);
-        transform: scale(0.97);
-      }
+      /* Additional responsive/theme tweaks as per your original CSS */
       @media (max-width: 1000px) {
         .main-flex {
           flex-direction: column;
@@ -222,32 +160,44 @@
         }
         .upload-side,
         .anim-panel {
-          min-width: 0;
+          min-width: unset;
           max-width: unset;
           width: 100%;
+          border-right: none;
+          border-bottom: 1px solid #23262e;
         }
         .anim-panel {
-          padding: 32px 8vw;
+          padding: 24px 28px 20px 28px;
         }
-        .upload-side {
-          padding: 32px 6vw;
+        .img-slot {
+          width: 100%;
+          height: auto;
+          max-height: 280px;
         }
-        .anim-area {
-          width: 98vw;
-          max-width: 420px;
+        #animationCanvas {
+          width: 100% !important;
+          height: auto !important;
         }
       }
+
       @media (max-width: 600px) {
-        .anim-area {
-          width: 97vw;
-          min-width: unset;
-        }
         .main-flex {
           border-radius: 0;
         }
-        .anim-panel,
-        .upload-side {
-          padding: 15px 1vw;
+        .section-title {
+            display: none;
+        }
+        .anim-area {
+            width: 310px;
+            height: 340px;
+        }
+        .upload-side,
+        .anim-panel {
+          padding: 12px 16px;
+        }
+        .upload-side h2,
+        .anim-panel h2 {
+          font-size: 1.2rem;
         }
       }
     </style>
@@ -264,7 +214,7 @@
           <circle cx="17" cy="35" r="2" fill="#ffffff" />
           <circle cx="53" cy="35" r="2" fill="#ffffff" />
         </svg>
-        <h1>KolamVerse</h1>
+        <h1><a href="/">KolamVerse</a></h1>
       </div>
       <span class="section-title">KolamTrace</span>
     </div>
@@ -279,7 +229,7 @@
           <span>Choose Image</span>
           <input type="file" id="kolam-upload" accept="image/*" />
         </label>
-        <div class="info">JPG, PNG, GIF • Max 2MB</div>
+        <div class="info">JPG, PNG • Max 2MB</div>
       </div>
       <div class="anim-panel">
         <h2>2. Kolam Animation</h2>
@@ -311,28 +261,6 @@
       let liveInterval = null;
       let navImg = new Image();
       let currentFile = null;
-
-      //   const previewBox = document.getElementById('preview-box');
-
-      //   previewBox.addEventListener('dragover', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.add('drag-over');
-      //   });
-
-      //   previewBox.addEventListener('dragleave', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.remove('drag-over');
-      //   });
-
-      //   previewBox.addEventListener('drop', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.remove('drag-over');
-      //     const files = event.dataTransfer.files;
-      //     if (files.length > 0) {
-      //       previewImg.src = URL.createObjectURL(files[0]);
-      //       handleFileUpload(files[0]);
-      //     }
-      //   });
 
       fileInput.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
