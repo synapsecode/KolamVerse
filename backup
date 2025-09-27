@@ -34,9 +34,9 @@
         gap: 10px;
       }
       .trace-bar .brand svg {
-        width: 48px;
-        height: 48px;
-        /* background: #fff; */
+        width: 42px;
+        height: 42px;
+        background: #fff;
         border-radius: 50%;
       }
       .trace-bar h1 {
@@ -62,6 +62,7 @@
         display: flex;
         min-height: 560px;
         overflow: hidden;
+        gap: 0;
       }
       .upload-side {
         min-width: 315px;
@@ -150,7 +151,7 @@
       }
       .anim-area {
         width: 410px;
-        height: 370px;
+        height: 340px;
         background: linear-gradient(120deg, #f7faf9 0%, #e8f9f2 96%);
         border-radius: 22px;
         box-shadow: 0 4px 28px rgba(25, 69, 58, 0.08);
@@ -158,32 +159,11 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 22px;
-        position: relative;
       }
       .anim-placeholder {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         text-align: center;
         color: #b7c7bc;
         font-size: 1.13rem;
-        z-index: 1;
-        pointer-events: none;
-      }
-      #animationCanvas {
-        position: relative;
-        z-index: 2;
-        width: 410px !important;
-        height: 370px !important;
-        background: transparent;
-        border-radius: 22px;
-        box-shadow: 0 4px 18px rgba(25, 69, 58, 0.07);
       }
       .actions {
         margin-top: 2px;
@@ -255,14 +235,11 @@
   <body>
     <div class="trace-bar">
       <div class="brand">
-        <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
-          <circle cx="35" cy="35" r="32" stroke="#c00" stroke-width="2" />
-          <ellipse cx="35" cy="35" rx="22" ry="22" stroke="#ffffff" stroke-width="2" />
-          <path stroke="#c00" stroke-width="1.8" d="M12 35 Q35 10 58 35 Q35 60 12 35 Z" />
-          <circle cx="35" cy="17" r="2" fill="#ffffff" />
-          <circle cx="35" cy="53" r="2" fill="#ffffff" />
-          <circle cx="17" cy="35" r="2" fill="#ffffff" />
-          <circle cx="53" cy="35" r="2" fill="#ffffff" />
+        <svg viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="27" stroke="#26b178" stroke-width="3" fill="none" />
+          <ellipse cx="30" cy="30" rx="19" ry="7" stroke="#d6372b" stroke-width="2.5" fill="none" />
+          <circle cx="30" cy="30" r="2.5" fill="#d6372b" />
+          <path d="M11 30 Q30 11, 49 30 Q30 47, 11 30 Z" stroke="#26b178" stroke-width="2" fill="none" />
         </svg>
         <h1>KolamVerse</h1>
       </div>
@@ -285,94 +262,40 @@
         <h2>2. Kolam Animation</h2>
         <div class="anim-area" id="anim-area">
           <div class="anim-placeholder" id="anim-placeholder">Upload a Kolam image and press <b>Animate</b> to view the tracing animation!</div>
-          <canvas id="animationCanvas" width="410" height="340"></canvas>
         </div>
         <div class="actions">
           <button id="animate-btn" disabled>Animate</button>
-          <button id="back20" disabled>&laquo; 20 Frames</button>
-          <button id="forward20" disabled>20 Frames &raquo;</button>
+          <button id="prev-btn" disabled>&laquo; 20 Frames</button>
+          <button id="next-btn" disabled>20 Frames &raquo;</button>
         </div>
       </div>
     </div>
 
     <script>
-      // Functionality script adapted for this layout/IDs
+      // Adapted your original script to match updated IDs and structure
+
       const fileInput = document.getElementById('kolam-upload');
       const previewImg = document.getElementById('preview-img');
       const previewPlaceholder = document.getElementById('preview-placeholder');
       const animateBtn = document.getElementById('animate-btn');
       const canvas = document.getElementById('animationCanvas');
-      const ctx = canvas.getContext('2d');
-      const back20Btn = document.getElementById('back20');
-      const forward20Btn = document.getElementById('forward20');
+      const ctx = canvas?.getContext('2d');
+      const back20Btn = document.getElementById('prev-btn');
+      const forward20Btn = document.getElementById('next-btn');
 
       let frames = [];
       let currentFrame = 0;
       let liveInterval = null;
       let navImg = new Image();
-      let currentFile = null;
-
-      //   const previewBox = document.getElementById('preview-box');
-
-      //   previewBox.addEventListener('dragover', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.add('drag-over');
-      //   });
-
-      //   previewBox.addEventListener('dragleave', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.remove('drag-over');
-      //   });
-
-      //   previewBox.addEventListener('drop', (event) => {
-      //     event.preventDefault();
-      //     previewBox.classList.remove('drag-over');
-      //     const files = event.dataTransfer.files;
-      //     if (files.length > 0) {
-      //       previewImg.src = URL.createObjectURL(files[0]);
-      //       handleFileUpload(files[0]);
-      //     }
-      //   });
-
-      fileInput.addEventListener('change', (event) => {
-        if (event.target.files.length > 0) {
-          handleFileUpload(event.target.files[0]);
-        }
-      });
-
-      function handleFileUpload(file) {
-        if (!file.type.startsWith('image/')) {
-          alert('Please upload an image file.');
-          return;
-        }
-
-        if (file.size > 2 * 1024 * 1024) {
-          alert('File size exceeds 2MB.');
-          return;
-        }
-
-        currentFile = file;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          previewImg.src = reader.result;
-          previewImg.style.display = 'block';
-          previewPlaceholder.style.display = 'none';
-          animateBtn.disabled = false;
-        };
-        reader.readAsDataURL(file);
-      }
 
       fileInput.addEventListener('change', () => {
         const file = fileInput.files[0];
         if (file) {
-          currentFile = event.target.files[0];
           previewImg.src = URL.createObjectURL(file);
           previewImg.style.display = '';
           previewPlaceholder.style.display = 'none';
           animateBtn.disabled = false;
         } else {
-          currentFile = null;
           previewImg.style.display = 'none';
           previewPlaceholder.style.display = '';
           animateBtn.disabled = true;
@@ -382,15 +305,15 @@
       animateBtn.addEventListener('click', async () => {
         const file = fileInput.files[0];
         if (!file) {
-          const file = currentFile;
-          if (!file) return alert('Select a file.');
+          alert('Select a file.');
+          return;
         }
 
         frames = [];
         currentFrame = 0;
         back20Btn.disabled = true;
         forward20Btn.disabled = true;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         previewImg.src = URL.createObjectURL(file);
 
@@ -409,7 +332,7 @@
 
         liveInterval = setInterval(() => {
           try {
-            ctx.drawImage(streamImg, 0, 0, canvas.width, canvas.height);
+            if (ctx) ctx.drawImage(streamImg, 0, 0, canvas.width, canvas.height);
           } catch (e) {}
         }, 30);
 
@@ -427,7 +350,9 @@
 
             clearInterval(liveInterval);
 
-            navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+            navImg.onload = () => {
+              if (ctx) ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+            };
             navImg.src = 'data:image/jpeg;base64,' + frames[currentFrame];
 
             back20Btn.disabled = false;
@@ -442,7 +367,9 @@
       function updateFrame(idx) {
         if (frames.length === 0) return;
         currentFrame = Math.max(0, Math.min(idx, frames.length - 1));
-        navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+        navImg.onload = () => {
+          if (ctx) ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
+        };
         navImg.src = 'data:image/jpeg;base64,' + frames[currentFrame];
       }
 
