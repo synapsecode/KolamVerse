@@ -11,7 +11,7 @@ from kolamdraw import draw_kolam
 from kolamdraw_web import draw_kolam_web_bytes
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyCFrcuthRepY_ihcvUVOgPn6C6j0ZRpq3Q")
+genai.configure(api_key="XXXXXXXXXXXXX")
 model = genai.GenerativeModel('gemini-2.5-pro')
 
 app = FastAPI()
@@ -128,6 +128,7 @@ CRITICAL RULES:
 1.  **Do NOT use 'L' or 'R' commands.** There are no explicit turns in this system. All turns are part of the 'A' and 'B' shapes.
 2.  Your goal is to create a simple, symmetrical starting seed (axiom). The complexity will come from the L-system's expansion, not from a long seed.
 3.  The axiom should be a repeating pattern that forms a closed loop, like `FBFBFB` or `ABABAB`.
+4.  Use the 'C' command strategically to control which parts of the design will be colorful.
 
 Here are some examples of converting a description to a starting seed (axiom):
 
@@ -143,6 +144,20 @@ Here are some examples of converting a description to a starting seed (axiom):
 - Description: "An alternating pattern of straight lines and rounded corners."
   Axiom: AFAFAF
 
+When using C:
+
+- Description: "A four-petaled flower shape that will grow more complex." #no color mentioned
+    Axiom: BBBB
+  
+- Description: "A completely colorful four-petaled flower."
+  Axiom: CBBBB
+
+- Description: "A design with only colorful, rounded corners, and white connecting lines."
+  Axiom: FCACFCAC
+
+- Description: "A pattern that alternates between colorful petals and white lines."
+  Axiom: CAFCAFCAFCAF
+
 Now, convert the following user description into a simple L-system axiom. Only output the final axiom string and nothing else.
 
 User Description: "{user_prompt}"
@@ -153,7 +168,7 @@ Axiom:
         generated_seed = response.text.strip()
         
         # Basic validation to ensure it only contains allowed characters
-        if all(c in "FABLR" for c in generated_seed):
+        if all(c in "FABLRC" for c in generated_seed):
              return JSONResponse({"seed": generated_seed})
         else:
              # Fallback or error if the model returns invalid text

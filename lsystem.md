@@ -28,6 +28,35 @@ Dots are joined through smooth arcs wrapping around them.
 
 A kolam is complete only when all dots are enclosed by a continuous drawing line.
 
+### **Rule 8** - Color rule
+
+Color Command (C) Placement Rules:
+1. Position Independence: C can be placed anywhere in the L-system string
+2. Non-Spatial: C does not affect turtle position, heading, or geometric structure
+3. State Modifier: C toggles between white mode (default) and colorful mode
+4. Persistence: Color state persists until next C command is encountered
+5. Expansion Immunity: C remains unchanged during L-system iterations
+6. Multiple Usage: Multiple C commands create alternating color segments
+7. Strategic Placement:
+   - Beginning (CFBFB): Entire pattern starts colorful
+   - Middle (FBCFB): Color transition partway through
+   - Symmetric (CFBCFBC): Balanced color alternation
+   - End (FBFBC): Ends with color change (affects recursive expansions)
+
+Example Color Patterns:
+- "FBFBFBFB" → All white strokes (default)
+- "CFBFBFBFB" → All colorful strokes
+- "FBCFBCFB" → White-Color-White alternation
+- "CABACABA" → Colorful arcs and petals only
+- "FCBCACBC" → Color toggle before each different element type
+
+Advanced Placement Strategies:
+1. Sectional Coloring: Place C before major structural elements (A, B)
+2. Rhythmic Patterns: Regular C intervals for breathing color rhythm
+3. Hierarchical Coloring: Different colors for different recursion levels
+4. Symmetrical Balance: Mirror C placement for visual harmony
+5. Emphasis Control: Use C to highlight specific pattern features 
+
 ---
 
 # 🔗 Kolam as a Graph
