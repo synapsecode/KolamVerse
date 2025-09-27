@@ -9,10 +9,7 @@ from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_a
 from kolamdrawv2 import draw_kolam_from_seed
 from kolamdraw import draw_kolam
 from kolamdraw_web import draw_kolam_web_bytes
-import google.generativeai as genai
-
-genai.configure(api_key="XXXXXXXXXXXXX")
-model = genai.GenerativeModel('gemini-2.5-pro')
+from gem_config import gem_model
 
 app = FastAPI()
 kolam_frame_manager = KolamFrameManager()
@@ -108,63 +105,29 @@ def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
     return Response(content=img_bytes, media_type="image/png")
 
 
+def load_ai_prompt_template():
+    """Load the AI prompt template from external file"""
+    try:
+        with open("prompt_seed_instructions.txt", "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        # Fallback prompt if file is missing
+        return """You are an expert designer of Kolam art using a specific L-system. Convert the user's description into a simple L-system axiom using only F, A, B, C commands. Only output the final axiom string.
+
+User Description: "{user_prompt}"
+Axiom:"""
+
 @app.post("/generate_seed_from_prompt")
 async def generate_seed_from_prompt(payload: dict = Body(...)):
     user_prompt = payload.get("prompt")
     if not user_prompt:
         return JSONResponse({"error": "Prompt cannot be empty"}, status_code=400)
 
-    # This is the master prompt that instructs the AI
-    instructional_prompt = f"""
-You are an expert designer of Kolam art using a specific L-system that grows recursively. Your task is to convert a user's description into a simple starting seed string, called an axiom. The system will then expand this axiom to create the full, intricate pattern.
-
-The available alphabet and their drawing actions are:
-- 'F': Draws a straight line. It does not change or grow in recursions.
-- 'A': Places a dot, then draws a 90-degree arc. In the next iteration, 'A' will be replaced by 'AFBFA'.
-- 'B': Places a dot, then draws a decorative 'petal' shape (a 270-degree loop). In the next iteration, 'B' will be replaced by 'AFBFBFBFA'.
-- 'C': Toggles between colorful mode (green/blue/red lines with black dots) and monochrome mode (white lines and dots). Does not change in recursions.
-
-CRITICAL RULES:
-1.  **Do NOT use 'L' or 'R' commands.** There are no explicit turns in this system. All turns are part of the 'A' and 'B' shapes.
-2.  Your goal is to create a simple, symmetrical starting seed (axiom). The complexity will come from the L-system's expansion, not from a long seed.
-3.  The axiom should be a repeating pattern that forms a closed loop, like `FBFBFB` or `ABABAB`.
-4.  Use the 'C' command strategically to control which parts of the design will be colorful.
-
-Here are some examples of converting a description to a starting seed (axiom):
-
-- Description: "A simple square-like shape made of straight lines and petals."
-  Axiom: FBFBFB
-
-- Description: "A design that starts with rounded corners."
-  Axiom: AAAA
-
-- Description: "A four-petaled flower shape that will grow more complex."
-  Axiom: BBBB
-
-- Description: "An alternating pattern of straight lines and rounded corners."
-  Axiom: AFAFAF
-
-When using C:
-
-- Description: "A four-petaled flower shape that will grow more complex." #no color mentioned
-    Axiom: BBBB
-  
-- Description: "A completely colorful four-petaled flower."
-  Axiom: CBBBB
-
-- Description: "A design with only colorful, rounded corners, and white connecting lines."
-  Axiom: FCACFCAC
-
-- Description: "A pattern that alternates between colorful petals and white lines."
-  Axiom: CAFCAFCAFCAF
-
-Now, convert the following user description into a simple L-system axiom. Only output the final axiom string and nothing else.
-
-User Description: "{user_prompt}"
-Axiom:
-"""
+    # Load the instructional prompt from external file
+    prompt_template = load_ai_prompt_template()
+    instructional_prompt = prompt_template.format(user_prompt=user_prompt)
     try:
-        response = model.generate_content(instructional_prompt)
+        response = gem_model.generate_content(instructional_prompt)
         generated_seed = response.text.strip()
         
         # Basic validation to ensure it only contains allowed characters
