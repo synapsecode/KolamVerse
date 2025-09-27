@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from PIL import Image
+import turbojpeg
+
+jpeg = turbojpeg.TurboJPEG()
 
 def load_all_points(csv_path: str):
     df = pd.read_csv(csv_path)
@@ -128,8 +131,7 @@ async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 
     for i, (u, v) in enumerate(path):
         cv2.line(canvas, to_px(u), to_px(v), (255, 255, 255), 3)
 
-        _, buffer = cv2.imencode(".jpg", canvas)
-        frame = buffer.tobytes()
+        frame = jpeg.encode(canvas, quality=80)
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
@@ -143,8 +145,7 @@ async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 
             await asyncio.sleep(step_delay)
 
     # Final frame
-    _, buffer = cv2.imencode(".jpg", canvas)
-    final_frame = buffer.tobytes()
+    final_frame = jpeg.encode(canvas, quality=80)
     yield (
         b"--frame\r\n"
         b"Content-Type: image/jpeg\r\n\r\n" + final_frame + b"\r\n"
