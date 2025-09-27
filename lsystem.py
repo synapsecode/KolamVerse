@@ -26,6 +26,10 @@ def generate_lsystem_state(state, n):
                 final_state += 'AFBFA'
             elif ch == 'B':
                 final_state += 'AFBFBFBFA'
+            elif ch == 'C':
+                final_state += 'C'  # C command passes through unchanged
+            else:
+                final_state += ch  # Pass through other commands (L, R, etc.)
         state = final_state
     return state
 
