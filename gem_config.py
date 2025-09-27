@@ -1,8 +1,12 @@
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
+
+# Load Environment Variables
+load_dotenv()
 
 def get_gemini_api_key():
-    api_key = "AIzaSyCFrcuthRepY_ihcvUVOgPn6C6j0ZRpq3Q"
+    api_key = os.environ.get('GEMINI_API_KEY')
     
     if api_key:
         return api_key
@@ -16,5 +20,3 @@ def configure_gemini():
     )
     
     return model
-
-gem_model = configure_gemini()

@@ -3,13 +3,12 @@ import os
 import shutil
 from fastapi import FastAPI, File, Response, UploadFile, Query, Body
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
+from gem_config import configure_gemini
 from kolam2csv import image_to_kolam_csv
 from kolam_frame_manger import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
-from kolamdrawv2 import draw_kolam_from_seed
-from kolamdraw import draw_kolam
 from kolamdraw_web import draw_kolam_web_bytes
-from gem_config import gem_model
+from utils import load_ai_prompt_template
 
 app = FastAPI()
 kolam_frame_manager = KolamFrameManager()
@@ -22,7 +21,6 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 def index():
     index_path = os.path.join(STATIC_DIR, "index.html")
     return FileResponse(index_path)
-
 
 #  ------------------- KolamTrace ---------------------
 
@@ -104,19 +102,6 @@ def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
     img_bytes = draw_kolam_web_bytes(seed=seed, depth=depth)
     return Response(content=img_bytes, media_type="image/png")
 
-
-def load_ai_prompt_template():
-    """Load the AI prompt template from external file"""
-    try:
-        with open("prompt_seed_instructions.txt", "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        # Fallback prompt if file is missing
-        return """You are an expert designer of Kolam art using a specific L-system. Convert the user's description into a simple L-system axiom using only F, A, B, C commands. Only output the final axiom string.
-
-User Description: "{user_prompt}"
-Axiom:"""
-
 @app.post("/generate_seed_from_prompt")
 async def generate_seed_from_prompt(payload: dict = Body(...)):
     user_prompt = payload.get("prompt")
@@ -127,7 +112,7 @@ async def generate_seed_from_prompt(payload: dict = Body(...)):
     prompt_template = load_ai_prompt_template()
     instructional_prompt = prompt_template.format(user_prompt=user_prompt)
     try:
-        response = gem_model.generate_content(instructional_prompt)
+        response = configure_gemini().generate_content(instructional_prompt)
         generated_seed = response.text.strip()
         
         # Basic validation to ensure it only contains allowed characters
