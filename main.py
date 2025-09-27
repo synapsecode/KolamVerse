@@ -3,6 +3,7 @@ import os
 import shutil
 from fastapi import FastAPI, File, Response, UploadFile, Query, Body
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from gem_config import configure_gemini
 from kolam2csv import image_to_kolam_csv
 from kolam_frame_manger import KolamFrameManager
@@ -16,6 +17,7 @@ kolam_frame_manager = KolamFrameManager()
 STATIC_DIR = "static"
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 @app.get("/", response_class=HTMLResponse)
 def index():
