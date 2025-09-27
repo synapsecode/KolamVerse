@@ -69,7 +69,7 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
     os.remove(csv_path)
 
     return StreamingResponse(
-        animate_eulerian_stream(path, kolam_frame_manager, step_delay=0.005),
+        animate_eulerian_stream(path, kolam_frame_manager, step_delay=0.00005),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 

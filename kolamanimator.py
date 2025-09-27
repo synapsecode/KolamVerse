@@ -108,7 +108,7 @@ def compute_dot_positions(path, size=900, bg=(46, 95, 59)):
 
 async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 95, 59)):
     """Async MJPEG streamer for Eulerian path with precomputed dots."""
-    size = 900
+    size = 350
     canvas = np.full((size, size, 3), bg, dtype=np.uint8)
 
     xs = [p[0] for edge in path for p in edge]
@@ -126,26 +126,26 @@ async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 
 
     # Draw dots
     for (cx, cy) in dots:
-        cv2.circle(canvas, (cx, cy), 8, (255, 191, 0), -1)
+        cv2.circle(canvas, (cx, cy), 4, (255, 191, 0), -1)
 
     for i, (u, v) in enumerate(path):
         cv2.line(canvas, to_px(u), to_px(v), (255, 255, 255), 3)
 
-        frame = jpeg.encode(canvas, quality=80)
+        frame = jpeg.encode(canvas, quality=30)
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
         )
 
         # Save every other frame for snapshots
-        if i % 2 == 0:
+        if i % 8 == 0:
             await frame_manager.add_frame(frame)
 
         if step_delay > 0:
             await asyncio.sleep(step_delay)
 
     # Final frame
-    final_frame = jpeg.encode(canvas, quality=80)
+    final_frame = jpeg.encode(canvas, quality=30)
     yield (
         b"--frame\r\n"
         b"Content-Type: image/jpeg\r\n\r\n" + final_frame + b"\r\n"

@@ -12,9 +12,10 @@
     <div>
         <h3>Kolam Animation</h3>
         <canvas id="animationCanvas" width="400" height="400"></canvas>
-        <div style="margin-top: 10px;">
-            <button id="back20" disabled>« 20 Frames</button>
-            <button id="forward20" disabled>20 Frames »</button>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button id="back20" disabled>« PREV</button>
+            <input type="range" id="frameSlider" min="0" max="0" value="0" style="flex: 1;">
+            <button id="forward20" disabled>NEXT »</button>
         </div>
     </div>
 </div>
@@ -45,92 +46,131 @@
 </style>
 
 <script>
-    const form = document.getElementById("uploadForm");
-    const fileInput = document.getElementById("fileInput");
-    const selectedImg = document.getElementById("selected");
-    const canvas = document.getElementById("animationCanvas");
-    const ctx = canvas.getContext("2d");
+    class KolamAnimator {
+        constructor({ fileInputId, formId, selectedImgId, canvasId, sliderId, backBtnId, forwardBtnId }) {
+            this.fileInput = document.getElementById(fileInputId);
+            this.form = document.getElementById(formId);
+            this.selectedImg = document.getElementById(selectedImgId);
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext("2d");
+            this.slider = document.getElementById(sliderId);
+            this.backBtn = document.getElementById(backBtnId);
+            this.forwardBtn = document.getElementById(forwardBtnId);
 
-    const back20Btn = document.getElementById("back20");
-    const forward20Btn = document.getElementById("forward20");
+            this.frames = [];
+            this.currentFrame = 0;
+            this.liveInterval = null;
+            this.navImg = new Image();
+            this.FRAMESKIP = 20;
 
-    let frames = [];
-    let currentFrame = 0;
-    let liveInterval = null;
-    let navImg = new Image(); // single img for navigation
+            this._bindEvents();
+        }
 
-    fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
-        if (file) selectedImg.src = URL.createObjectURL(file);
-    });
+        _bindEvents() {
+            this.fileInput.addEventListener("change", () => this._previewSelected());
+            this.form.addEventListener("submit", (e) => this._handleUpload(e));
+            this.slider.addEventListener("input", () => this._updateFrame(this.slider.value));
+            this.backBtn.addEventListener("click", () => this._updateFrame(this.currentFrame - this.FRAMESKIP));
+            this.forwardBtn.addEventListener("click", () => this._updateFrame(this.currentFrame + this.FRAMESKIP));
+        }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const file = fileInput.files[0];
-        if (!file) return alert("Select a file.");
+        _previewSelected() {
+            const file = this.fileInput.files[0];
+            if (file) this.selectedImg.src = URL.createObjectURL(file);
+        }
 
-        // Reset frontend state
-        frames = [];
-        currentFrame = 0;
-        back20Btn.disabled = true;
-        forward20Btn.disabled = true;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        async _handleUpload(e) {
+            e.preventDefault();
+            const file = this.fileInput.files[0];
+            if (!file) return alert("Select a file.");
 
-        selectedImg.src = URL.createObjectURL(file);
+            this._resetState();
+            this.selectedImg.src = URL.createObjectURL(file);
 
-        const formData = new FormData();
-        formData.append("file", file);
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
 
-        const res = await fetch("/upload_kolam", { method: "POST", body: formData });
-        const data = await res.json();
-        if (data.error) return alert("Error: " + data.error);
+                const res = await fetch("/upload_kolam", { method: "POST", body: formData });
+                const data = await res.json();
+                if (data.error) return alert("Error: " + data.error);
 
-        // Clear previous live MJPEG
-        if (liveInterval) clearInterval(liveInterval);
+                this._startLiveMJPEG(data.csv_file);
+                this._pollSnapshots();
+            } catch (err) {
+                console.error("Upload failed:", err);
+            }
+        }
 
-        // Show live MJPEG
-        const streamImg = new Image();
-        streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(data.csv_file)}`;
-        streamImg.crossOrigin = "anonymous";
+        _resetState() {
+            this.frames = [];
+            this.currentFrame = 0;
+            this.slider.value = 0;
+            this.slider.max = 0;
+            this.backBtn.disabled = true;
+            this.forwardBtn.disabled = true;
+            if (this.liveInterval) clearInterval(this.liveInterval);
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
 
-        liveInterval = setInterval(() => {
-            try { ctx.drawImage(streamImg, 0, 0, canvas.width, canvas.height); }
-            catch (e) { }
-        }, 30);
+        _startLiveMJPEG(csvFile) {
+            if (this.liveInterval) clearInterval(this.liveInterval);
+            const streamImg = new Image();
+            streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(csvFile)}`;
+            streamImg.crossOrigin = "anonymous";
 
-        // Poll for snapshots every 4s
-        const pollSnapshots = async () => {
+            this.liveInterval = setInterval(() => {
+                try { this.ctx.drawImage(streamImg, 0, 0, this.canvas.width, this.canvas.height); }
+                catch (e) { }
+            }, 30);
+        }
+
+        async _pollSnapshots() {
             try {
                 const snapRes = await fetch(`/kolam_snapshots`);
-                if (!snapRes.ok) { setTimeout(pollSnapshots, 4000); return; }
+                if (!snapRes.ok) { setTimeout(() => this._pollSnapshots(), 4000); return; }
+
                 const snapData = await snapRes.json();
+                this.frames = snapData.frames;
+                this.currentFrame = this.frames.length - 1;
 
-                frames = snapData.frames;
-                currentFrame = frames.length - 1; // freeze on last snapshot
+                clearInterval(this.liveInterval);
+                this._updateFrame(this.currentFrame);
 
-                clearInterval(liveInterval); // stop live MJPEG
-
-                // Draw last snapshot
-                navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
-                navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
-
-                // Enable 20-frame buttons
-                back20Btn.disabled = false;
-                forward20Btn.disabled = false;
+                // Enable controls
+                this.slider.max = this.frames.length - 1;
+                this.slider.value = this.currentFrame;
+                this._updateNavButtons();
             } catch (err) {
-                setTimeout(pollSnapshots, 4000); // retry on error
+                setTimeout(() => this._pollSnapshots(), 4000);
             }
-        };
-        pollSnapshots();
-    });
+        }
 
-    function updateFrame(idx) {
-        if (frames.length === 0) return;
-        currentFrame = Math.max(0, Math.min(idx, frames.length - 1));
-        navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
-        navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
+        _updateFrame(idx) {
+            if (this.frames.length === 0) return;
+            this.currentFrame = Math.max(0, Math.min(idx, this.frames.length - 1));
+            this.navImg.onload = () => this.ctx.drawImage(this.navImg, 0, 0, this.canvas.width, this.canvas.height);
+            this.navImg.src = "data:image/jpeg;base64," + this.frames[this.currentFrame];
+
+            // Update slider and buttons
+            this.slider.value = this.currentFrame;
+            this._updateNavButtons();
+        }
+
+        _updateNavButtons() {
+            this.backBtn.disabled = this.currentFrame === 0;
+            this.forwardBtn.disabled = this.currentFrame >= this.frames.length - 1;
+        }
     }
 
-    back20Btn.addEventListener("click", () => updateFrame(currentFrame - 20));
-    forward20Btn.addEventListener("click", () => updateFrame(currentFrame + 20));
+    // Initialize
+    new KolamAnimator({
+        fileInputId: "fileInput",
+        formId: "uploadForm",
+        selectedImgId: "selected",
+        canvasId: "animationCanvas",
+        sliderId: "frameSlider",
+        backBtnId: "back20",
+        forwardBtnId: "forward20"
+    });
 </script>
