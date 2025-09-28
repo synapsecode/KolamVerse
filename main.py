@@ -175,23 +175,22 @@ async def describe_kolam_ai(
     if not file.content_type.startswith("image/"):
         return JSONResponse({"error": "Only image files are allowed", "success": False}, status_code=400)
     
+    temp_path = os.path.join(STATIC_DIR, f"ai_{file.filename}")
     try:
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
     except Exception as e:
-        print(e)
+        print("ERRRR",e)
         return JSONResponse({"success": False, 'error': 'file copy error'})
 
     # ------- Remove Eventually --------
-    temp_path = os.path.join(STATIC_DIR, f"ai_{file.filename}")
     csv_path = temp_path + ".csv"
     image_to_kolam_csv(temp_path, csv_path)
     strokes = load_all_points(csv_path)
     strokes = normalize_strokes(strokes)
     eulerian_path = compute_eulerian_path(strokes, tol=1e-1)
 
-    resp, err = describe_kolam_using_ai(
-        file,
+    resp, err = await describe_kolam_using_ai(
         eulerian_path,
         include_image, 
         compress,

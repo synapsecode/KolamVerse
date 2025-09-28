@@ -133,6 +133,7 @@ input[type='file'] {
     flex-direction: column;
     align-items: center;
     min-width: 320px;
+    overflow: scroll;
 }
 
 .anim-panel h2 {
@@ -154,8 +155,10 @@ input[type='file'] {
     color: #4e6074;
     text-align: center;
     position: absolute;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
