@@ -1,33 +1,24 @@
 import base64
 import os
 import shutil
-<<<<<<< Updated upstream
-from fastapi import FastAPI, File, Response, UploadFile, Query, Body
-=======
-import io
 import hashlib
 from typing import Optional, Dict
 import numpy as np  # Needed for linspace in _compress_semantics
-from fastapi import FastAPI, File, Response, UploadFile, Query
->>>>>>> Stashed changes
+from fastapi import FastAPI, File, Response, UploadFile, Query, Body
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from gem_config import configure_gemini
 from kolam2csv import image_to_kolam_csv
 from kolam_frame_manger import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
-<<<<<<< Updated upstream
 from kolamdraw_web import draw_kolam_web_bytes
 from utils import load_ai_prompt_template
-=======
-from kolamdrawv2 import draw_kolam_from_seed
 from kolam_analyzer import analyze_kolam_image
 from kolam_semantics import semantic_json_string
 from gemini_client import generate_kolam_narration, GeminiNotConfigured
 from offline_narrator import offline_narrate
-from kolamdrawv2 import simulate_kolam_path
+from lsystem import generate_lsystem_state  # for simulate_kolam_path used in seed narration
 import json
->>>>>>> Stashed changes
 
 app = FastAPI()
 kolam_frame_manager = KolamFrameManager()
@@ -137,39 +128,32 @@ def app_kolamdraw():
 
 @app.get("/drawkolam")
 def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
-<<<<<<< Updated upstream
-    # Use the web-compatible turtle implementation that matches kolamdraw.py exactly
-    # Color mode is controlled by 'C' commands in the seed string
+    """Render a kolam from a seed using the web drawing implementation."""
     img_bytes = draw_kolam_web_bytes(seed=seed, depth=depth)
     return Response(content=img_bytes, media_type="image/png")
 
 @app.post("/generate_seed_from_prompt")
 async def generate_seed_from_prompt(payload: dict = Body(...)):
+    """Generate a seed string via Gemini from a natural language prompt."""
     user_prompt = payload.get("prompt")
     if not user_prompt:
         return JSONResponse({"error": "Prompt cannot be empty"}, status_code=400)
-
-    # Load the instructional prompt from external file
     prompt_template = load_ai_prompt_template()
     instructional_prompt = prompt_template.format(user_prompt=user_prompt)
     try:
-        response = configure_gemini().generate_content(instructional_prompt)
-        generated_seed = response.text.strip()
-        
-        # Basic validation to ensure it only contains allowed characters
+        client = configure_gemini()
+        if client is None:
+            return JSONResponse({"error": "Gemini not configured"}, status_code=503)
+        response = client.generate_content(instructional_prompt)
+        generated_seed = (response.text or "").strip()
+        if not generated_seed:
+            return JSONResponse({"error": "Empty response from model"}, status_code=502)
         if all(c in "FABLRC" for c in generated_seed):
-             return JSONResponse({"seed": generated_seed})
-        else:
-             # Fallback or error if the model returns invalid text
-             return JSONResponse({"error": "Failed to generate a valid seed.", "details": generated_seed}, status_code=500)
-
+            return JSONResponse({"seed": generated_seed})
+        return JSONResponse({"error": "Failed to generate a valid seed.", "details": generated_seed}, status_code=422)
     except Exception as e:
-        return JSONResponse({"error": "An error occurred with the AI model.", "details": str(e)}, status_code=500)
-
-=======
-    img_bytes = draw_kolam_from_seed(seed=seed, depth=depth)
-    return Response(content=img_bytes, media_type="image/png")
-
+        return JSONResponse({"error": "AI generation failed", "details": str(e)}, status_code=500)
+    
 # ---------------- Kolam Analysis & Description -------------------
 
 @app.post("/describe_kolam")
@@ -257,18 +241,15 @@ def generate_seed_description(seed):
         description += "This represents a moderately complex kolam design. "
     else:
         description += "This creates an intricate kolam with high complexity. "
-    
-    # Check for repetition
+
     unique_chars = len(set(seed))
     if unique_chars < seed_length / 2:
         description += "The seed shows repetitive elements that will create rhythmic patterns in the final design. "
-    
-    # Symmetry analysis
+
     if seed == seed[::-1]:
         description += "The seed is palindromic, which will result in symmetrical kolam patterns. "
-    
+
     description += "When expanded through L-system iterations, this seed will generate a traditional kolam following the fundamental rules of continuous line drawing around dots."
-    
     return description
 
 @app.get("/narrate_seed")
@@ -284,7 +265,6 @@ def narrate_seed(seed: str = "FBFBFBFB", depth: int = 1):
         if len(pts) < 2:
             return JSONResponse({"success": False, "error": "Seed produced insufficient points."}, status_code=400)
         path_edges = list(zip(pts[:-1], pts[1:]))
-        # Reuse semantic builder via helper; semantic_json_string expects an Eulerian path list.
         sem_json = semantic_json_string(path_edges)
         narration = offline_narrate(sem_json)
         return JSONResponse({
@@ -296,6 +276,60 @@ def narrate_seed(seed: str = "FBFBFBFB", depth: int = 1):
         })
     except Exception as e:
         return JSONResponse({"success": False, "error": f"Seed narration failed: {e}"}, status_code=500)
+
+# ---------------- Seed Path Simulation Helper -------------------
+def simulate_kolam_path(seed: str = "FBFBFBFB", depth: int = 1, step: int = 20, angle: int = 0):
+    """Lightweight path simulation for seeds (used only for offline seed narration)."""
+    from math import cos, sin, radians, sqrt
+    from lsystem import generate_lsystem_state
+    state = generate_lsystem_state(seed, depth)
+    x, y = 0.0, 0.0
+    heading = float(angle)
+    path_points = [(x, y)]
+
+    def add_arc(x, y, heading, radius, extent_deg, steps=20):
+        points = []
+        step_angle = radians(extent_deg / steps)
+        cur_x, cur_y = x, y
+        for i in range(steps):
+            theta1 = radians(heading) + i * step_angle
+            theta2 = radians(heading) + (i + 1) * step_angle
+            x_next = cur_x + radius * (sin(theta2) - sin(theta1))
+            y_next = cur_y - radius * (cos(theta2) - cos(theta1))
+            points.append((x_next, y_next))
+            cur_x, cur_y = x_next, y_next
+        heading += extent_deg
+        return points, heading, (cur_x, cur_y)
+
+    for ch in state:
+        if ch == 'F':
+            x2 = x + step * cos(radians(heading))
+            y2 = y + step * sin(radians(heading))
+            path_points.append((x2, y2))
+            x, y = x2, y2
+        elif ch == 'A':
+            arc_points, heading, (x, y) = add_arc(x, y, heading, radius=step * 1.2, extent_deg=90)
+            path_points.extend(arc_points)
+        elif ch == 'B':
+            I = step / sqrt(2)
+            x2 = x + I * cos(radians(heading))
+            y2 = y + I * sin(radians(heading))
+            path_points.append((x2, y2))
+            x, y = x2, y2
+            arc_points, heading, (x, y) = add_arc(x, y, heading, radius=I * 1.1, extent_deg=270)
+            path_points.extend(arc_points)
+            x2 = x + I * cos(radians(heading))
+            y2 = y + I * sin(radians(heading))
+            path_points.append((x2, y2))
+            x, y = x2, y2
+        elif ch == 'L':
+            heading += 45
+        elif ch == 'R':
+            heading -= 45
+        else:
+            pass
+    # Convert to (point, point) edge list style elsewhere; return raw points here
+    return path_points, []
 
 
 # ---------------- AI Kolam Narration (Gemini) -------------------
@@ -466,4 +500,3 @@ async def describe_kolam_ai(
                 os.remove(csv_path2)
             except Exception:
                 pass
->>>>>>> Stashed changes
