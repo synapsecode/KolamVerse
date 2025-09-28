@@ -2,68 +2,127 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>B-Spline Desmos Link Generator</title>
-    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=3b8636e28ece45fe9af5093938db0676"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KolamSpline | KolamVerse</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #141518;
+            color: #c9d1d9;
+        }
+
+        .trace-bar {
+            display: flex;
+            align-items: center;
+            padding: 14px 32px;
+            background: #1c1f26;
+            border-bottom: 1px solid #2d333b;
+        }
+
+        .trace-bar h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            color: #78f5c6;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            align-items: center;
+        }
+
+        #calculator {
+            width: 100%;
+            max-width: 1400px;
+            height: 720px;
+            border-radius: 16px;
+            border: 2px solid #30363d;
+            background: #191e24;
+        }
+
+        #link-output {
+            margin-top: 12px;
+            color: #9ec6ae;
+            word-break: break-all;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                margin: 28px 16px;
+                padding: 0;
+            }
+
+            #calculator {
+                max-width: 100%;
+                height: 600px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="calculator" style="width: 1200px; height: 660px;"></div>
-    <textarea id="json-input" rows="6" cols="60"
-        placeholder='Enter JSON like {"knots":[0,1,2,3,4,5,6], "cx":[0,1,2,3], "cy":[0,1,0,-1]}'></textarea>
-    <br>
-    <button onclick="generateLink()">Generate Desmos Link</button>
-    <p id="link-output"></p>
+    <div class="trace-bar">
+        <h1>KolamSpline</h1>
+    </div>
 
+    <div class="main-container">
+        <div id="calculator"></div>
+        <p id="link-output"></p>
+    </div>
+
+    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=3b8636e28ece45fe9af5093938db0676"></script>
     <script>
-        const calculator = Desmos.Calculator(document.getElementById('calculator'));
+        const calculator = Desmos.Calculator(document.getElementById('calculator'), {
+            backgroundColor: "#262626",
+            textColor: "#ffffff",
+            keypad: false,
+        });
 
-        function generateLink() {
-            let data;
-            try {
-                data = JSON.parse(document.getElementById('json-input').value);
-            } catch (e) {
-                alert("Invalid JSON");
-                return;
-            }
-
-            const { knots: T, cx: a, cy: b } = data;
+        function drawFromJSON(json) {
+            const { knots: T, cx: a, cy: b } = json;
 
             if (!T || !a || !b) {
-                alert("JSON must contain knots, cx, cy");
+                document.getElementById('link-output').textContent = "Invalid JSON: must contain knots, cx, cy";
                 return;
             }
 
-            // Reset calculator
             calculator.setBlank();
-
-            // Define lists
             calculator.setExpression({ id: 'T', latex: `T=[${T.join(",")}]` });
             calculator.setExpression({ id: 'a', latex: `a=[${a.join(",")}]` });
             calculator.setExpression({ id: 'b', latex: `b=[${b.join(",")}]` });
-
-            // Safe division
             calculator.setExpression({ id: 'D', latex: `D(n,d)=\\left\\{d=0:0,\\frac{n}{d}\\right\\}` });
-
-            // Basis functions with explicit multiplications
             calculator.setExpression({ id: 'B0', latex: `B_{0}(i,t)=\\left\\{T[i]\\le t<T[i+1]:1,0\\right\\}` });
             calculator.setExpression({ id: 'B1', latex: `B_{1}(i,t)=D(t-T[i],T[i+1]-T[i])*B_{0}(i,t)+D(T[i+2]-t,T[i+2]-T[i+1])*B_{0}(i+1,t)` });
             calculator.setExpression({ id: 'B2', latex: `B_{2}(i,t)=D(t-T[i],T[i+2]-T[i])*B_{1}(i,t)+D(T[i+3]-t,T[i+3]-T[i+1])*B_{1}(i+1,t)` });
             calculator.setExpression({ id: 'B3', latex: `B_{3}(i,t)=D(t-T[i],T[i+3]-T[i])*B_{2}(i,t)+D(T[i+4]-t,T[i+4]-T[i+1])*B_{2}(i+1,t)` });
-
-            // Curve definitions with explicit *
             calculator.setExpression({ id: 'w', latex: `w(t)=\\sum_{i=1}^{\\operatorname{length}(a)}a[i]*B_{3}(i,t)`, hidden: true });
             calculator.setExpression({ id: 'z', latex: `z(t)=\\sum_{i=1}^{\\operatorname{length}(b)}b[i]*B_{3}(i,t)`, hidden: true });
             calculator.setExpression({ id: 'curve', latex: `(w(t),z(t))\\ \\operatorname{for}\\ T[4]\\le t\\le T[\\operatorname{length}(T)-3]` });
-
-            calculator.setMathBounds({
-                left: -1200,
-                right: 1200,
-                bottom: -1200,
-                top: 1200
-            });
+            calculator.setMathBounds({ left: -1200, right: 1200, bottom: -1200, top: 1200 });
         }
 
+        // Auto-read JSON from URL
+        const params = new URLSearchParams(window.location.search);
+        const encoded = params.get('data');
+        if (encoded) {
+            try {
+                const json = JSON.parse(decodeURIComponent(atob(encoded)));
+                drawFromJSON(json);
+            } catch (e) {
+                document.getElementById('link-output').textContent = "Failed to parse JSON from URL";
+            }
+        } else {
+            document.getElementById('link-output').textContent = "No JSON data in URL";
+        }
     </script>
 </body>
 

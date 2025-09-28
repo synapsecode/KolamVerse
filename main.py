@@ -31,7 +31,6 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 
-
 @app.get("/", response_class=HTMLResponse)
 def index():
     index_path = os.path.join(STATIC_DIR, "index.html")
@@ -82,6 +81,8 @@ async def upload_kolam(
     # Delete the Image
     os.remove(file_path)
 
+    # TODO: REMOVE CSV
+
     return {"csv_file": csv_filename}
 
 
@@ -115,7 +116,13 @@ async def kolam_snapshots():
     frames_b64 = [base64.b64encode(f).decode("utf-8") for f in snapshots]
     return JSONResponse({"status":"ready","frames": frames_b64}, headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
 
-# ---------------- Spline Curve Render -------------------
+# ---------------- KolamSpline -------------------
+
+
+@app.get("/kolamspline", response_class=HTMLResponse)
+async def index(data: str=None):
+    index_path = os.path.join(STATIC_DIR, "spline.html")
+    return FileResponse(index_path)
 
 @app.get("/spline_json")
 def spline_json(

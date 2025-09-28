@@ -12,8 +12,9 @@ class KolamAnimator {
 
         // --- Add missing curve-related elements ---
         this.showCurveBtn = document.getElementById(cfg.showCurveBtnId);
-        this.curveImg = document.getElementById(cfg.curveImgId);
-        this.curveSamples = document.getElementById(cfg.curveSamplesId);
+
+        // this.curveImg = document.getElementById(cfg.curveImgId);
+        // this.curveSamples = document.getElementById(cfg.curveSamplesId);
         this.curveSmooth = document.getElementById(cfg.curveSmoothId);
         this.curvePanel = document.getElementById(cfg.curvePanelId);
         this.downloadPoints = document.getElementById(cfg.downloadPointsId);
@@ -48,7 +49,7 @@ class KolamAnimator {
             this.placeholder.classList.add('hidden');
             this.animateBtn.disabled = false;
             this.showCurveBtn.disabled = true;
-            this.curveImg.style.display = "none";
+            // this.curveImg.style.display = "none";
         }
     }
 
@@ -144,23 +145,45 @@ class KolamAnimator {
         this.forwardBtn.disabled = this.currentFrame >= this.frames.length - 1;
     }
 
-    _showCurve() {
+    async _showCurve() {
         if (!this.csvFile) {
             alert("Upload and animate first");
             return;
         }
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const samples = Math.max(100, Math.min(20000, parseInt(this.curveSamples.value) || 1200));
-        const smooth = Math.max(0, Math.min(1000, parseFloat(this.curveSmooth.value) || 0));
-        const ts = Date.now();
-        const url = `/spline_curve?csv_file=${encodeURIComponent(this.csvFile)}&width=${w}&height=${h}&samples=${samples}&smooth=${smooth}&thickness=4&ts=${ts}`;
-        this.curveImg.src = url;
-        this.curveImg.style.display = 'block';
-        this.curvePanel.style.display = "block";
 
-        this.downloadPoints.href = `/spline_points?csv_file=${encodeURIComponent(this.csvFile)}&samples=${samples}&smooth=${smooth}`;
+        const smooth = Math.max(
+            0,
+            Math.min(1000, parseFloat(this.curveSmooth?.value) || 0)
+        );
+
+        this.curvePanel.style.display = "block";
+        this.downloadPoints.href = `/spline_points?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`;
         this.downloadJSON.href = `/spline_json?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`;
+
+        try {
+            const response = await fetch(
+                `/spline_json?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`
+            );
+            if (!response.ok) throw new Error("Failed to fetch JSON");
+
+            const jsonData = await response.json();
+            const { knots, cx, cy } = jsonData;
+
+            if (!knots || !cx || !cy) {
+                alert("Invalid JSON received");
+                return;
+            }
+
+            const encoded = btoa(JSON.stringify({ knots, cx, cy }));
+
+            setTimeout(() => {
+                window.open(`/kolamspline?data=${encoded}`, '_blank');
+            }, 1300);
+
+        } catch (err) {
+            console.error(err);
+            alert("Error fetching spline JSON");
+        }
     }
 }
 
@@ -214,7 +237,6 @@ function getSelectedNarrationMode() {
 }
 
 
-
 new KolamAnimator({
     fileInputId: 'kolam-upload',
     previewImgId: 'preview-img',
@@ -225,8 +247,8 @@ new KolamAnimator({
     forwardBtnId: 'forward20',
     sliderId: 'frameSlider',
     showCurveBtnId: "show-curve",
-    curveImgId: "curvePreview",
-    curveSamplesId: "curve-samples",
+    // curveImgId: "curvePreview",
+    // curveSamplesId: "curve-samples",
     curveSmoothId: "curve-smooth",
     curvePanelId: "curve-panel",
     downloadPointsId: "downloadPoints",

@@ -2,8 +2,6 @@ from kolamanimator import load_all_points, normalize_strokes
 import numpy as np
 from scipy.interpolate import splprep, splev
 
-
-
 def get_tck(csv_path, smooth, max_points=100):
     strokes = load_all_points(csv_path)
     if not strokes:
@@ -32,7 +30,7 @@ def get_tck(csv_path, smooth, max_points=100):
     return (tck, None)
 
 
-def get_spline_json(csv_path, smooth, max_points=500, decimals=8):
+def get_spline_json(csv_path, smooth, max_points=100, decimals=8):
     tck, err = get_tck(csv_path, smooth, max_points=max_points)
     if err is not None:
         return (None, err)
