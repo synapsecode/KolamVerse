@@ -20,6 +20,7 @@ class KolamAnimator {
         this.backBtn.addEventListener('click', () => this._updateFrame(this.currentFrame - this.FRAMESKIP));
         this.forwardBtn.addEventListener('click', () => this._updateFrame(this.currentFrame + this.FRAMESKIP));
         this.slider.addEventListener('input', () => this._updateFrame(parseInt(this.slider.value)));
+        this.showCurveBtn.addEventListener("click", () => this._showCurve());
     }
     _previewSelected() {
         const file = this.fileInput.files[0];
@@ -104,6 +105,30 @@ class KolamAnimator {
         this.backBtn.disabled = this.currentFrame === 0;
         this.forwardBtn.disabled = this.currentFrame >= this.frames.length - 1;
     }
+
+
+    // Spline Curve
+    _showCurve() {
+        if (!this.csvFile) {
+            alert("Upload and animate first");
+            return;
+        }
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const samples = Math.max(100, Math.min(20000, parseInt(this.curveSamples.value) || 1200));
+        const smooth = Math.max(0, Math.min(1000, parseFloat(this.curveSmooth.value) || 0));
+        // cache buster so the browser reloads new image
+        const ts = Date.now();
+        const url = `/spline_curve?csv_file=${encodeURIComponent(this.csvFile)}&width=${w}&height=${h}&samples=${samples}&smooth=${smooth}&thickness=4&ts=${ts}`;
+        this.curveImg.src = url;                        // large panel preview
+        this.curveImg.style.display = 'block';
+        this.curvePanel.style.display = "block";
+
+        // Set download links
+        this.downloadPoints.href = `/spline_points?csv_file=${encodeURIComponent(this.csvFile)}&samples=${samples}&smooth=${smooth}`;
+        this.downloadJSON.href = `/spline_json?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`;
+    }
+
 }
 
 new KolamAnimator({
@@ -116,6 +141,8 @@ new KolamAnimator({
     forwardBtnId: 'forward20',
     sliderId: 'frameSlider'
 });
+
+
 
 async function getKolamDescription(file) {
     try {

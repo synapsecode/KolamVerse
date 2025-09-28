@@ -57,7 +57,7 @@ body {
     box-shadow: 0 2px 40px rgba(20, 32, 44, 0.15);
     display: flex;
     /* min-height: 560px; */
-    overflow: hidden;
+    overflow: auto; /* allow new panels to extend and scroll */
 }
 
 /* Upload area */
