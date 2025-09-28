@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>B-Spline Desmos Link Generator</title>
+    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=3b8636e28ece45fe9af5093938db0676"></script>
+</head>
+
+<body>
+    <div id="calculator" style="width: 1200px; height: 660px;"></div>
+    <textarea id="json-input" rows="6" cols="60"
+        placeholder='Enter JSON like {"knots":[0,1,2,3,4,5,6], "cx":[0,1,2,3], "cy":[0,1,0,-1]}'></textarea>
+    <br>
+    <button onclick="generateLink()">Generate Desmos Link</button>
+    <p id="link-output"></p>
+
+    <script>
+        const calculator = Desmos.Calculator(document.getElementById('calculator'));
+
+        function generateLink() {
+            let data;
+            try {
+                data = JSON.parse(document.getElementById('json-input').value);
+            } catch (e) {
+                alert("Invalid JSON");
+                return;
+            }
+
+            const { knots: T, cx: a, cy: b } = data;
+
+            if (!T || !a || !b) {
+                alert("JSON must contain knots, cx, cy");
+                return;
+            }
+
+            // Reset calculator
+            calculator.setBlank();
+
+            // Define lists
+            calculator.setExpression({ id: 'T', latex: `T=[${T.join(",")}]` });
+            calculator.setExpression({ id: 'a', latex: `a=[${a.join(",")}]` });
+            calculator.setExpression({ id: 'b', latex: `b=[${b.join(",")}]` });
+
+            // Safe division
+            calculator.setExpression({ id: 'D', latex: `D(n,d)=\\left\\{d=0:0,\\frac{n}{d}\\right\\}` });
+
+            // Basis functions with explicit multiplications
+            calculator.setExpression({ id: 'B0', latex: `B_{0}(i,t)=\\left\\{T[i]\\le t<T[i+1]:1,0\\right\\}` });
+            calculator.setExpression({ id: 'B1', latex: `B_{1}(i,t)=D(t-T[i],T[i+1]-T[i])*B_{0}(i,t)+D(T[i+2]-t,T[i+2]-T[i+1])*B_{0}(i+1,t)` });
+            calculator.setExpression({ id: 'B2', latex: `B_{2}(i,t)=D(t-T[i],T[i+2]-T[i])*B_{1}(i,t)+D(T[i+3]-t,T[i+3]-T[i+1])*B_{1}(i+1,t)` });
+            calculator.setExpression({ id: 'B3', latex: `B_{3}(i,t)=D(t-T[i],T[i+3]-T[i])*B_{2}(i,t)+D(T[i+4]-t,T[i+4]-T[i+1])*B_{2}(i+1,t)` });
+
+            // Curve definitions with explicit *
+            calculator.setExpression({ id: 'w', latex: `w(t)=\\sum_{i=1}^{\\operatorname{length}(a)}a[i]*B_{3}(i,t)`, hidden: true });
+            calculator.setExpression({ id: 'z', latex: `z(t)=\\sum_{i=1}^{\\operatorname{length}(b)}b[i]*B_{3}(i,t)`, hidden: true });
+            calculator.setExpression({ id: 'curve', latex: `(w(t),z(t))\\ \\operatorname{for}\\ T[4]\\le t\\le T[\\operatorname{length}(T)-3]` });
+
+            calculator.setMathBounds({
+                left: -1200,
+                right: 1200,
+                bottom: -1200,
+                top: 1200
+            });
+        }
+
+    </script>
+</body>
+
+</html>

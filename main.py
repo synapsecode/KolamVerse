@@ -12,11 +12,11 @@ from kolam_analyze.seed_desc import seed_narration
 from kolam_frame_manager import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
 from kolamdraw_web import draw_kolam_web_bytes
+from kolamspline import get_spline_csv, get_spline_json
 from utils import load_ai_prompt_template
 import io
 import cv2
 import numpy as np
-from scipy.interpolate import splprep, splev
 from dotenv import load_dotenv
 
 # Load Environment Variables
@@ -117,88 +117,6 @@ async def kolam_snapshots():
 
 # ---------------- Spline Curve Render -------------------
 
-def _hex_to_bgr(hex_color: str):
-    hex_color = hex_color.lstrip('#')
-    if len(hex_color) == 6:
-        r = int(hex_color[0:2], 16)
-        g = int(hex_color[2:4], 16)
-        b = int(hex_color[4:6], 16)
-        return (b, g, r)
-    return (59, 95, 46)  # fallback to #2e5f3b
-
-
-@app.get("/spline_curve")
-def spline_curve(
-    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
-    width: int = Query(410, ge=100, le=2000),
-    height: int = Query(370, ge=100, le=2000),
-    samples: int = Query(1200, ge=100, le=20000),
-    smooth: float = Query(0.0, ge=0.0),
-    bg: str = Query("#2e5f3b"),
-    thickness: int = Query(3, ge=1, le=12)
-):
-    """Render a smooth spline curve PNG from the uploaded CSV (no dots)."""
-    csv_path = os.path.join(STATIC_DIR, csv_file)
-    if not os.path.exists(csv_path):
-        return JSONResponse({"error": "CSV file not found"}, status_code=404)
-
-    # Load strokes and normalize to common scale like animator
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-
-    # Concatenate into single polyline
-    P = np.vstack(strokes)
-    # Remove duplicates to avoid spline issues
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    # Fit parametric spline x(u), y(u)
-    try:
-        # Parameterize by cumulative distance for stability
-        d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-        if d[-1] == 0:
-            raise ValueError("Degenerate path")
-        u = d / d[-1]
-        # splprep expects data as [x, y] with parameter u
-        tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-        u_new = np.linspace(0, 1, samples)
-        x_new, y_new = splev(u_new, tck)
-        C = np.column_stack([x_new, y_new])
-    except Exception:
-        # Fallback to original polyline
-        C = P
-
-    # Render to image using OpenCV
-    canvas = np.full((height, width, 3), _hex_to_bgr(bg), dtype=np.uint8)
-
-    # Compute transform to fit curve into image with padding
-    pad = 0.05  # 5% border
-    xmin, ymin = C.min(axis=0)
-    xmax, ymax = C.max(axis=0)
-    span_x = max(xmax - xmin, 1e-6)
-    span_y = max(ymax - ymin, 1e-6)
-    scale = min((width * (1 - 2 * pad)) / span_x, (height * (1 - 2 * pad)) / span_y)
-
-    def to_px(pt):
-        x = int((pt[0] - xmin) * scale + width * pad)
-        y = int((pt[1] - ymin) * scale + height * pad)
-        # Flip Y for image coordinates
-        return (x, height - y)
-
-    # Draw polyline (smooth look via dense sampling)
-    for i in range(1, len(C)):
-        cv2.line(canvas, to_px(C[i - 1]), to_px(C[i]), (255, 255, 255), thickness, lineType=cv2.LINE_AA)
-
-    ok, buf = cv2.imencode('.png', canvas)
-    if not ok:
-        return JSONResponse({"error": "Failed to encode image"}, status_code=500)
-    return Response(content=buf.tobytes(), media_type="image/png")
-
-
 @app.get("/spline_json")
 def spline_json(
     csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
@@ -209,33 +127,11 @@ def spline_json(
     if not os.path.exists(csv_path):
         return JSONResponse({"error": "CSV file not found"}, status_code=404)
 
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-    P = np.vstack(strokes)
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-    if d[-1] == 0:
-        return JSONResponse({"error": "Degenerate path"}, status_code=400)
-    u = d / d[-1]
-
-    tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-    t, c, k = tck
-    cx, cy = c
-    return JSONResponse({
-        "type": "bspline",
-        "degree": int(k),
-        "knots": t.tolist(),
-        "cx": cx.tolist(),
-        "cy": cy.tolist(),
-        "notes": "Parametric B-spline: x(t)=sum_i cx[i]*B_{i,k}(t), y(t)=sum_i cy[i]*B_{i,k}(t). t in [knots[k], knots[-k-1]]"
-    })
-
+    res, err = get_spline_json(csv_path, smooth)
+    if(err != None):
+        return JSONResponse({"error": str(err)}, status_code=400)
+    
+    return JSONResponse(res)
 
 @app.get("/spline_points")
 def spline_points(
@@ -243,199 +139,16 @@ def spline_points(
     samples: int = Query(1000, ge=10, le=50000),
     smooth: float = Query(0.0, ge=0.0)
 ):
-    """Return sampled points along the spline as CSV (x,y)."""
     csv_path = os.path.join(STATIC_DIR, csv_file)
     if not os.path.exists(csv_path):
         return JSONResponse({"error": "CSV file not found"}, status_code=404)
+    data, err = get_spline_csv(csv_path, samples, smooth)
+    if(err != None):
+        return JSONResponse({"error": str(err)}, status_code=400)
 
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-    P = np.vstack(strokes)
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-    if d[-1] == 0:
-        return JSONResponse({"error": "Degenerate path"}, status_code=400)
-    u = d / d[-1]
-
-    tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-    u_new = np.linspace(0, 1, samples)
-    x_new, y_new = splev(u_new, tck)
-    C = np.column_stack([x_new, y_new])
-
-    # Build CSV bytes
-    lines = ["x,y"] + [f"{p[0]},{p[1]}" for p in C]
-    data = "\n".join(lines).encode()
     return Response(content=data, media_type="text/csv", headers={
         "Content-Disposition": "attachment; filename=kolam_points.csv"
     })
-
-
-# ---------------- Spline Curve Render -------------------
-
-def _hex_to_bgr(hex_color: str):
-    hex_color = hex_color.lstrip('#')
-    if len(hex_color) == 6:
-        r = int(hex_color[0:2], 16)
-        g = int(hex_color[2:4], 16)
-        b = int(hex_color[4:6], 16)
-        return (b, g, r)
-    return (59, 95, 46)  # fallback to #2e5f3b
-
-
-@app.get("/spline_curve")
-def spline_curve(
-    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
-    width: int = Query(410, ge=100, le=2000),
-    height: int = Query(370, ge=100, le=2000),
-    samples: int = Query(1200, ge=100, le=20000),
-    smooth: float = Query(0.0, ge=0.0),
-    bg: str = Query("#2e5f3b"),
-    thickness: int = Query(3, ge=1, le=12)
-):
-    """Render a smooth spline curve PNG from the uploaded CSV (no dots)."""
-    csv_path = os.path.join(STATIC_DIR, csv_file)
-    if not os.path.exists(csv_path):
-        return JSONResponse({"error": "CSV file not found"}, status_code=404)
-
-    # Load strokes and normalize to common scale like animator
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-
-    # Concatenate into single polyline
-    P = np.vstack(strokes)
-    # Remove duplicates to avoid spline issues
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    # Fit parametric spline x(u), y(u)
-    try:
-        # Parameterize by cumulative distance for stability
-        d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-        if d[-1] == 0:
-            raise ValueError("Degenerate path")
-        u = d / d[-1]
-        # splprep expects data as [x, y] with parameter u
-        tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-        u_new = np.linspace(0, 1, samples)
-        x_new, y_new = splev(u_new, tck)
-        C = np.column_stack([x_new, y_new])
-    except Exception:
-        # Fallback to original polyline
-        C = P
-
-    # Render to image using OpenCV
-    canvas = np.full((height, width, 3), _hex_to_bgr(bg), dtype=np.uint8)
-
-    # Compute transform to fit curve into image with padding
-    pad = 0.05  # 5% border
-    xmin, ymin = C.min(axis=0)
-    xmax, ymax = C.max(axis=0)
-    span_x = max(xmax - xmin, 1e-6)
-    span_y = max(ymax - ymin, 1e-6)
-    scale = min((width * (1 - 2 * pad)) / span_x, (height * (1 - 2 * pad)) / span_y)
-
-    def to_px(pt):
-        x = int((pt[0] - xmin) * scale + width * pad)
-        y = int((pt[1] - ymin) * scale + height * pad)
-        # Flip Y for image coordinates
-        return (x, height - y)
-
-    # Draw polyline (smooth look via dense sampling)
-    for i in range(1, len(C)):
-        cv2.line(canvas, to_px(C[i - 1]), to_px(C[i]), (255, 255, 255), thickness, lineType=cv2.LINE_AA)
-
-    ok, buf = cv2.imencode('.png', canvas)
-    if not ok:
-        return JSONResponse({"error": "Failed to encode image"}, status_code=500)
-    return Response(content=buf.tobytes(), media_type="image/png")
-
-
-@app.get("/spline_json")
-def spline_json(
-    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
-    smooth: float = Query(0.0, ge=0.0)
-):
-    """Return B-spline parameters t (knots), c (coefficients), k (degree)."""
-    csv_path = os.path.join(STATIC_DIR, csv_file)
-    if not os.path.exists(csv_path):
-        return JSONResponse({"error": "CSV file not found"}, status_code=404)
-
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-    P = np.vstack(strokes)
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-    if d[-1] == 0:
-        return JSONResponse({"error": "Degenerate path"}, status_code=400)
-    u = d / d[-1]
-
-    tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-    t, c, k = tck
-    cx, cy = c
-    return JSONResponse({
-        "type": "bspline",
-        "degree": int(k),
-        "knots": t.tolist(),
-        "cx": cx.tolist(),
-        "cy": cy.tolist(),
-        "notes": "Parametric B-spline: x(t)=sum_i cx[i]*B_{i,k}(t), y(t)=sum_i cy[i]*B_{i,k}(t). t in [knots[k], knots[-k-1]]"
-    })
-
-
-@app.get("/spline_points")
-def spline_points(
-    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
-    samples: int = Query(1000, ge=10, le=50000),
-    smooth: float = Query(0.0, ge=0.0)
-):
-    """Return sampled points along the spline as CSV (x,y)."""
-    csv_path = os.path.join(STATIC_DIR, csv_file)
-    if not os.path.exists(csv_path):
-        return JSONResponse({"error": "CSV file not found"}, status_code=404)
-
-    strokes = load_all_points(csv_path)
-    if not strokes:
-        return JSONResponse({"error": "No strokes found in CSV"}, status_code=400)
-    strokes = normalize_strokes(strokes)
-    P = np.vstack(strokes)
-    diff = np.diff(P, axis=0)
-    keep = np.ones(len(P), dtype=bool)
-    keep[1:] = (np.linalg.norm(diff, axis=1) > 1e-6)
-    P = P[keep]
-
-    d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
-    if d[-1] == 0:
-        return JSONResponse({"error": "Degenerate path"}, status_code=400)
-    u = d / d[-1]
-
-    tck, _ = splprep([P[:, 0], P[:, 1]], u=u, s=smooth)
-    u_new = np.linspace(0, 1, samples)
-    x_new, y_new = splev(u_new, tck)
-    C = np.column_stack([x_new, y_new])
-
-    # Build CSV bytes
-    lines = ["x,y"] + [f"{p[0]},{p[1]}" for p in C]
-    data = "\n".join(lines).encode()
-    return Response(content=data, media_type="text/csv", headers={
-        "Content-Disposition": "attachment; filename=kolam_points.csv"
-    })
-
 
 # ---------------- KolamDraw -------------------
 
