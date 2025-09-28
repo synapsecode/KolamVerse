@@ -176,7 +176,7 @@ def offline_narrate(semantics_json: str) -> str:
         "Overall, the continuous line respects kolam principles: flow, enclosure of space, and balanced repetition."
     )
 
-    return " " .join(parts)
+    return " ".join(parts)
 
 
 __all__ = ["offline_narrate"]

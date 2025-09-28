@@ -7,7 +7,6 @@ import numpy as np
 Point = Tuple[float, float]
 Edge = Tuple[Point, Point]
 
-
 def _angle_between(a: np.ndarray, b: np.ndarray) -> float:
     if a.shape != (2,) or b.shape != (2,):
         return 0.0
