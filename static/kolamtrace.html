@@ -48,7 +48,7 @@
                 <div class="anim-placeholder" id="anim-placeholder">
                     Upload a Kolam image and press <b>Animate</b> to view the tracing animation!
                 </div>
-                <canvas id="animationCanvas" width="410" height="340"></canvas>
+                <canvas id="animationCanvas" width="410" height="370"></canvas>
             </div>
             <div class="actions">
                 <button id="animate-btn" disabled>Animate</button>
@@ -135,6 +135,7 @@
 
             _startLiveMJPEG(csvFile) {
                 if (this.liveInterval) clearInterval(this.liveInterval);
+                document.getElementById("anim-placeholder").style.display = 'none'
                 const streamImg = new Image();
                 streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(csvFile)}`;
                 streamImg.crossOrigin = "anonymous";
