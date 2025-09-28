@@ -78,17 +78,76 @@
         .right-pane {
             flex: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background: #0d1117;
+            padding: 20px;
         }
 
-        .right-pane img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 12px;
+        .canvas-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #kolamCanvas {
             border: 2px solid #30363d;
+            border-radius: 12px;
             background: #000000;
+            max-width: 90%;
+            max-height: 70vh;
+        }
+
+        .animation-controls {
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .control-button:hover {
+            background: #30363d;
+        }
+
+        .control-button:disabled {
+            background: #161b22;
+            color: #6e7681;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .speed-slider {
+            width: 100px;
+            height: 4px;
+            background: #30363d;
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .progress-info {
+            color: #8b949e;
+            font-size: 0.9rem;
         }
 
         .loader {
@@ -115,32 +174,69 @@
         <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
       
         <button onclick="generateKolam()">Generate</button>
-         <hr style="width:100%; border-top: 1px solid #ccc; margin: 20px 0;">
+         <hr>
       
         <textarea id="prompt-input" placeholder="Enter your prompt (e.g. Make it more round, a flower with 6 petals, an intricate weaving pattern)"></textarea>
         <button id="prompt-button" onclick="generateFromPrompt()">Generate from Prompt</button>
         <div id="loader" class="loader">Generating seed...</div>
     </div>
     <div class="right-pane">
-        <img id="kolamImage" src="" alt="Generated Kolam will appear here">
+        <div class="canvas-container">
+            <canvas id="kolamCanvas" width="800" height="600">Generated Kolam will appear here</canvas>
+        </div>
+        <div class="animation-controls" id="animationControls">
+            <button class="control-button" id="playPauseBtn" onclick="togglePlayPause()">⏸️ Pause</button>
+            <button class="control-button" id="restartBtn" onclick="restartAnimation()">🔄 Restart</button>
+            <button class="control-button" id="stepBtn" onclick="stepForward()">⏭️ Step</button>
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="5" onchange="changeSpeed()">
+            </div>
+            <div class="progress-info" id="progressInfo">Step 0 / 0</div>
+        </div>
     </div>
 
     <script>
-        function generateKolam() {
+        // Animation state
+        let drawingSteps = [];
+        let currentStep = 0;
+        let animationId = null;
+        let isPlaying = false;
+        let animationSpeed = 50; // milliseconds between steps
+        
+        async function generateKolam() {
             const seed = document.getElementById("prompt").value.trim();
             if (!seed) {
                 alert("Please enter a seed first.");
                 return;
             }
 
-            // Add timestamp so browser doesn’t cache old image
-            const ts = Date.now();
-
-            // Point directly to FastAPI endpoint
-            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
-
-            // Update image src
-            document.getElementById("kolamImage").src = url;
+            // Clear previous animation
+            stopAnimation();
+            clearCanvas();
+            
+            try {
+                // Get drawing steps from backend
+                const response = await fetch(`/drawkolam_steps?seed=${encodeURIComponent(seed)}&depth=2`);
+                if (!response.ok) {
+                    throw new Error('Failed to generate kolam steps');
+                }
+                
+                const data = await response.json();
+                drawingSteps = data.steps;
+                currentStep = 0;
+                
+                // Show animation controls
+                document.getElementById('animationControls').style.display = 'flex';
+                updateProgressInfo();
+                
+                // Start animation automatically
+                startAnimation();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate kolam animation');
+            }
         }
 
         async function generateFromPrompt() {
@@ -151,15 +247,12 @@
             }
             
             const loader = document.getElementById("loader");
-            const seedInput = document.getElementById("prompt-input"); // Fixed: should be the seed textarea
             const promptInput = document.getElementById("prompt");
             const promptButton = document.getElementById("prompt-button");
 
             // Show loader and disable button
             loader.style.display = "block";
             promptButton.disabled = true;
-
-            console.log(seedInput.value);
 
             try {
                 const response = await fetch('/generate_seed_from_prompt', {
@@ -180,9 +273,9 @@
                 const data = await response.json();
                 
                 // Update the seed input with the AI's response
-                promptInput.value = data.seed; // Fixed: should update the seed textarea
+                promptInput.value = data.seed;
 
-                // Automatically generate the Kolam with the new seed
+                // Automatically generate the Kolam animation with the new seed
                 generateKolam();
 
             } catch (error) {
@@ -193,6 +286,101 @@
                 loader.style.display = "none";
                 promptButton.disabled = false;
             }
+        }
+        
+        function clearCanvas() {
+            const canvas = document.getElementById('kolamCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function drawStep(step) {
+            const canvas = document.getElementById('kolamCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (step.type === 'line') {
+                ctx.strokeStyle = step.color;
+                ctx.lineWidth = step.width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(step.start.x, step.start.y);
+                ctx.lineTo(step.end.x, step.end.y);
+                ctx.stroke();
+            } else if (step.type === 'dot') {
+                ctx.fillStyle = step.color;
+                ctx.beginPath();
+                ctx.arc(step.x, step.y, step.radius, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        
+        function startAnimation() {
+            if (isPlaying || currentStep >= drawingSteps.length) return;
+            
+            isPlaying = true;
+            document.getElementById('playPauseBtn').textContent = '⏸️ Pause';
+            
+            function animate() {
+                if (!isPlaying || currentStep >= drawingSteps.length) {
+                    isPlaying = false;
+                    document.getElementById('playPauseBtn').textContent = '▶️ Play';
+                    return;
+                }
+                
+                drawStep(drawingSteps[currentStep]);
+                currentStep++;
+                updateProgressInfo();
+                
+                animationId = setTimeout(animate, animationSpeed);
+            }
+            
+            animate();
+        }
+        
+        function stopAnimation() {
+            isPlaying = false;
+            if (animationId) {
+                clearTimeout(animationId);
+                animationId = null;
+            }
+            document.getElementById('playPauseBtn').textContent = '▶️ Play';
+        }
+        
+        function togglePlayPause() {
+            if (isPlaying) {
+                stopAnimation();
+            } else {
+                startAnimation();
+            }
+        }
+        
+        function restartAnimation() {
+            stopAnimation();
+            currentStep = 0;
+            clearCanvas();
+            updateProgressInfo();
+        }
+        
+        function stepForward() {
+            if (currentStep < drawingSteps.length) {
+                drawStep(drawingSteps[currentStep]);
+                currentStep++;
+                updateProgressInfo();
+            }
+        }
+        
+        function changeSpeed() {
+            const slider = document.getElementById('speedSlider');
+            // Convert slider value (1-10) to animation delay (100ms - 10ms)
+            animationSpeed = 110 - (slider.value * 10);
+        }
+        
+        function updateProgressInfo() {
+            const progressInfo = document.getElementById('progressInfo');
+            progressInfo.textContent = `Step ${currentStep} / ${drawingSteps.length}`;
         }
     </script>
 </body>

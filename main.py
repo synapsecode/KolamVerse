@@ -104,6 +104,13 @@ def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
     img_bytes = draw_kolam_web_bytes(seed=seed, depth=depth)
     return Response(content=img_bytes, media_type="image/png")
 
+@app.get("/drawkolam_steps")
+def drawkolam_steps(seed: str = "FBFBFBFB", depth: int = 1):
+    # Generate step-by-step drawing instructions for animation
+    from kolamdraw_web import generate_drawing_steps
+    steps = generate_drawing_steps(seed=seed, depth=depth)
+    return JSONResponse({"steps": steps})
+
 
 def load_ai_prompt_template():
     """Load the AI prompt template from external file"""

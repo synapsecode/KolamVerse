@@ -271,7 +271,7 @@ def draw_kolam_web(seed="FBFBFBFB", depth=1, step=20, angle=0, img_size=(800, 80
     
     # Add center dots for enclosed regions
     for center in t.enclosed_regions:
-        t.dot_positions.append((center[0], center[1], 4, 'darkred' if is_colorful else 'white'))  # Smaller, different color for centers
+        t.dot_positions.append((center[0], center[1], 2, 'darkred' if is_colorful else 'white'))  # Smaller dots for centers
     
     # Now render everything to a PIL image
     return render_to_image(t, img_size, padding)
@@ -357,3 +357,221 @@ def draw_kolam_web_bytes(seed="FBFBFBFB", depth=1, step=20, angle=0, img_size=(8
     img.save(buf, format="PNG")
     buf.seek(0)
     return buf.getvalue()
+
+def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_size=(800, 600)):
+    """
+    Generate step-by-step drawing instructions for canvas animation
+    Returns a list of drawing commands that can be executed sequentially
+    """
+    # Generate L-system state
+    if isinstance(seed, str) and all(c in "FABLRC" for c in seed):
+        state = generate_lsystem_state(seed, depth)
+    else:
+        state = seed
+    
+    # Create web turtle to trace the path
+    t = WebTurtle()
+    t.pendown()
+    t.setheading(angle)
+    
+    # Track drawing steps and dots
+    drawing_steps = []
+    dot_positions = []
+    is_colorful = False  # Start in white mode
+    
+    # Execute L-system commands and record steps
+    for ch in state:
+        if ch == 'F':
+            color = 'green' if is_colorful else 'white'
+            start_pos = (t.x, t.y)
+            t.fd(step)
+            end_pos = (t.x, t.y)
+            
+            drawing_steps.append({
+                'type': 'line',
+                'start': {'x': start_pos[0], 'y': start_pos[1]},
+                'end': {'x': end_pos[0], 'y': end_pos[1]},
+                'color': color,
+                'width': 3
+            })
+            
+        elif ch == 'A':
+            color = 'blue' if is_colorful else 'white'
+            
+            # Store position for animation
+            start_pos = t.position()
+            start_heading = t.heading
+            
+            # First, call the actual turtle method to detect enclosed regions
+            t.start_new_shape()  # Start tracking the arc as a potential enclosed region
+            t.circle(step * 1.5, 90)
+            
+            # Now reset position and create animation segments
+            t.x, t.y = start_pos
+            t.heading = start_heading
+            
+            # Simulate the arc with small steps for animation
+            arc_steps = 20
+            radius = step * 1.5
+            for i in range(arc_steps):
+                current_pos = (t.x, t.y)
+                t._move_along_arc(radius, 90 / arc_steps)
+                new_pos = (t.x, t.y)
+                
+                drawing_steps.append({
+                    'type': 'line',
+                    'start': {'x': current_pos[0], 'y': current_pos[1]},
+                    'end': {'x': new_pos[0], 'y': new_pos[1]},
+                    'color': color,
+                    'width': 3
+                })
+            
+        elif ch == 'B':
+            color = 'red' if is_colorful else 'white'
+            
+            I = step / sqrt(2)
+            
+            # Store starting position for both region detection and animation
+            region_start_pos = t.position()
+            region_start_heading = t.heading
+            
+            # First, call the actual turtle methods to detect enclosed regions
+            t.start_new_shape()
+            t.fd(I)
+            t.circle(I * 0.7, 270)
+            t.fd(I)
+            t.check_for_enclosed_region()
+            
+            # Now reset position and create animation segments
+            t.x, t.y = region_start_pos
+            t.heading = region_start_heading
+            
+            # First forward movement for animation
+            start_pos = (t.x, t.y)
+            t.fd(I)
+            end_pos = (t.x, t.y)
+            drawing_steps.append({
+                'type': 'line',
+                'start': {'x': start_pos[0], 'y': start_pos[1]},
+                'end': {'x': end_pos[0], 'y': end_pos[1]},
+                'color': color,
+                'width': 3
+            })
+            
+            # Arc with multiple segments for animation
+            arc_steps = 30
+            radius = I * 0.7
+            for i in range(arc_steps):
+                current_pos = (t.x, t.y)
+                t._move_along_arc(radius, 270 / arc_steps)
+                new_pos = (t.x, t.y)
+                
+                drawing_steps.append({
+                    'type': 'line',
+                    'start': {'x': current_pos[0], 'y': current_pos[1]},
+                    'end': {'x': new_pos[0], 'y': new_pos[1]},
+                    'color': color,
+                    'width': 3
+                })
+            
+            # Second forward movement for animation
+            start_pos = (t.x, t.y)
+            t.fd(I)
+            end_pos = (t.x, t.y)
+            drawing_steps.append({
+                'type': 'line',
+                'start': {'x': start_pos[0], 'y': start_pos[1]},
+                'end': {'x': end_pos[0], 'y': end_pos[1]},
+                'color': color,
+                'width': 3
+            })
+            
+        elif ch == 'C':
+            is_colorful = not is_colorful  # Toggle colorful mode
+            
+        elif ch == 'L':
+            t.left(45)
+            t.check_for_enclosed_region()  # Check for completed shapes at turns
+            
+        elif ch == 'R':
+            t.right(45)
+            t.check_for_enclosed_region()  # Check for completed shapes at turns
+    
+    # Calculate scaling and positioning for canvas
+    scale = 1
+    offset_x = 0
+    offset_y = 0
+    
+    if drawing_steps:
+        all_x = []
+        all_y = []
+        for step in drawing_steps:
+            if step['type'] == 'line':
+                all_x.extend([step['start']['x'], step['end']['x']])
+                all_y.extend([step['start']['y'], step['end']['y']])
+        
+        if all_x and all_y:
+            min_x, max_x = min(all_x), max(all_x)
+            min_y, max_y = min(all_y), max(all_y)
+            
+            # Calculate scale and offset
+            width = max_x - min_x
+            height = max_y - min_y
+            padding = 50
+            
+            if width > 0 and height > 0:
+                scale_x = (canvas_size[0] - 2*padding) / width
+                scale_y = (canvas_size[1] - 2*padding) / height
+                scale = min(scale_x, scale_y)
+                
+                offset_x = padding - min_x * scale + (canvas_size[0] - 2*padding - width * scale) / 2
+                offset_y = padding - min_y * scale + (canvas_size[1] - 2*padding - height * scale) / 2
+                
+                # Transform all coordinates
+                for step in drawing_steps:
+                    if step['type'] == 'line':
+                        step['start']['x'] = step['start']['x'] * scale + offset_x
+                        step['start']['y'] = step['start']['y'] * scale + offset_y
+                        step['end']['x'] = step['end']['x'] * scale + offset_x
+                        step['end']['y'] = step['end']['y'] * scale + offset_y
+                        step['width'] = max(1, int(step['width'] * scale * 0.3))
+    
+    # Add dots at the end
+    # Process basic dot positions (from A and B commands)
+    unique_dot_positions = set(dot_positions)
+    for x, y in unique_dot_positions:
+        transformed_x = x * scale + offset_x
+        transformed_y = y * scale + offset_y
+        dot_color = 'white'  # Always white for visibility on black canvas
+        
+        drawing_steps.append({
+            'type': 'dot',
+            'x': transformed_x,
+            'y': transformed_y,
+            'radius': 1,  # Smaller dots
+            'color': dot_color
+        })
+    
+    # Add center dots for enclosed regions (this was missing!)
+    for center in t.enclosed_regions:
+        t.dot_positions.append((center[0], center[1], 2, 'white'))  # Always white for dark theme, smaller size
+    
+    # Process turtle's dot positions (from dot() method calls with color info)
+    for x, y, size, color in t.dot_positions:
+        transformed_x = x * scale + offset_x
+        transformed_y = y * scale + offset_y
+        # Ensure dot color is visible on black canvas
+        if color == 'black' or color == 'darkred':
+            dot_color = 'white'
+        else:
+            dot_color = color
+        
+        drawing_steps.append({
+            'type': 'dot',
+            'x': transformed_x,
+            'y': transformed_y,
+            'radius': max(1, int(size * scale * 0.2)),  # Smaller dots with reduced scaling
+            'color': dot_color
+        })
+    
+    return drawing_steps
