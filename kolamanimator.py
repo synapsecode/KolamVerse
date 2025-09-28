@@ -5,9 +5,24 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from PIL import Image
-import turbojpeg
+try:
+    import turbojpeg  # type: ignore
+    _tj = turbojpeg.TurboJPEG()
 
-jpeg = turbojpeg.TurboJPEG()
+    def _encode_jpeg(image, quality: int = 30) -> bytes:
+        return _tj.encode(image, quality=quality)
+
+    _USING_TURBOJPEG = True
+except Exception:
+    # Fallback to OpenCV encoder if turbojpeg DLL not available
+    def _encode_jpeg(image, quality: int = 30) -> bytes:
+        q = max(0, min(100, int(quality)))
+        ok, buf = cv2.imencode('.jpg', image, [int(cv2.IMWRITE_JPEG_QUALITY), q])
+        if not ok:
+            raise RuntimeError('JPEG encoding failed')
+        return buf.tobytes()
+
+    _USING_TURBOJPEG = False
 
 def load_all_points(csv_path: str):
     df = pd.read_csv(csv_path)
@@ -131,7 +146,7 @@ async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 
     for i, (u, v) in enumerate(path):
         cv2.line(canvas, to_px(u), to_px(v), (255, 255, 255), 3)
 
-        frame = jpeg.encode(canvas, quality=30)
+        frame = _encode_jpeg(canvas, quality=30)
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
@@ -145,7 +160,7 @@ async def animate_eulerian_stream(path, frame_manager, step_delay=0.05, bg=(46, 
             await asyncio.sleep(step_delay)
 
     # Final frame
-    final_frame = jpeg.encode(canvas, quality=30)
+    final_frame = _encode_jpeg(canvas, quality=30)
     yield (
         b"--frame\r\n"
         b"Content-Type: image/jpeg\r\n\r\n" + final_frame + b"\r\n"

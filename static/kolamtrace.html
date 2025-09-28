@@ -55,13 +55,61 @@
                 <button id="back20" disabled>&laquo; 20 Frames</button>
                 <input type="range" id="frameSlider" min="0" max="0" value="0" style="flex: 1;">
                 <button id="forward20" disabled>20 Frames &raquo;</button>
+                <button id="show-curve" disabled>Show Mathematical Curve</button>
+                <label style="color:#78f5c6;">Samples <input type="number" id="curve-samples" value="1200" min="100" max="20000" style="width:90px; margin-left:6px;"></label>
+                <label style="color:#78f5c6;">Smooth <input type="number" id="curve-smooth" value="0" min="0" max="1000" step="1" style="width:70px; margin-left:6px;"></label>
+            </div>
+            <div id="curve-panel" style="margin-top:18px; display:none; width:100%;">
+                <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;">
+                    <img id="curvePreview" src="" alt="Spline curve" style="max-width:410px; min-height:120px; background:#23262e; border-radius:12px; border:2px solid #30363d;" />
+                    <div style="flex:1; min-width:280px; color:#c9d1d9;">
+                        <h3 style="margin-top:0; color:#78f5c6;">Mathematical Curve (B‑spline)</h3>
+                        <p style="margin:4px 0 6px 0; font-style:italic; color:#9ec6ae;">Derived from the traced CSV points by fitting a cubic B‑spline x(t), y(t). Download JSON to view knots and coefficients for verification (e.g., Desmos).</p>
+                        <p style="margin:6px 0 10px 0;">Parametric form per interval [t<sub>i</sub>, t<sub>i+1</sub>]:<br>
+                        x(t) = a<sub>xi</sub> + b<sub>xi</sub>τ + c<sub>xi</sub>τ² + d<sub>xi</sub>τ³;<br>
+                        y(t) = a<sub>yi</sub> + b<sub>yi</sub>τ + c<sub>yi</sub>τ² + d<sub>yi</sub>τ³ (τ = t − t<sub>i</sub>)</p>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                            <a id="downloadPoints" class="link-button" href="#" download>Download Points (CSV)</a>
+                            <a id="downloadJSON" class="link-button" href="#" download>Download Spline (JSON)</a>
+                        </div>
+                        <details>
+                            <summary style="cursor:pointer; color:#78f5c6;">Open Desmos instructions</summary>
+                            <ol>
+                                <li>Open <a href="https://www.desmos.com/calculator" target="_blank" rel="noreferrer">Desmos</a>.</li>
+                                <li>Click the + → Table → paste two columns from the CSV (x,y).</li>
+                                <li>Add a line: <code>y \\sim f(x)</code> or use parametric by plotting successive segments.</li>
+                                <li>Style: thick white curve, dark green background (#2e5f3b).</li>
+                            </ol>
+                        </details>
+                        <details>
+                            <summary style="cursor:pointer; color:#78f5c6;">Use exact formula in Desmos (B‑spline)</summary>
+                            <ol>
+                                <li>Click <b>Download Spline (JSON)</b> above. Copy arrays <code>T</code> (knots), <code>Cx</code>, <code>Cy</code>.</li>
+                                <li>In Desmos, add expressions (one per line):</li>
+                            </ol>
+<pre style="white-space:pre-wrap; background:#0d1117; color:#c9d1d9; padding:10px; border-radius:8px; border:1px solid #30363d;">
+T = [ ...paste knots from JSON... ]
+Cx = [ ...paste cx from JSON... ]
+Cy = [ ...paste cy from JSON... ]
+B0(i,t) = when( T[i] ≤ t and t < T[i+1], 1, 0 )
+B1(i,t) = ((t - T[i])/(T[i+1]-T[i]))*B0(i,t) + ((T[i+2]-t)/(T[i+2]-T[i+1]))*B0(i+1,t)
+B2(i,t) = ((t - T[i])/(T[i+2]-T[i]))*B1(i,t) + ((T[i+3]-t)/(T[i+3]-T[i+1]))*B1(i+1,t)
+B3(i,t) = ((t - T[i])/(T[i+3]-T[i]))*B2(i,t) + ((T[i+4]-t)/(T[i+4]-T[i+1]))*B2(i+1,t)
+x(t) = sum( Cx[i]*B3(i,t), i, 1, length(Cx) )
+y(t) = sum( Cy[i]*B3(i,t), i, 1, length(Cy) )
+( x(t), y(t) ), t ∈ [ T[4], T[length(T)-3] ]
+</pre>
+                            <p style="margin-top:6px;">This reproduces the same cubic B‑spline used in the app.</p>
+                        </details>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         class KolamAnimator {
-            constructor({ fileInputId, previewImgId, placeholderId, animateBtnId, canvasId, backBtnId, forwardBtnId, sliderId }) {
+            constructor({ fileInputId, previewImgId, placeholderId, animateBtnId, canvasId, backBtnId, forwardBtnId, sliderId, showCurveBtnId, curveImgId, curveSamplesId, curveSmoothId, curvePanelId, downloadPointsId, downloadJSONId }) {
                 this.fileInput = document.getElementById(fileInputId);
                 this.previewImg = document.getElementById(previewImgId);
                 this.placeholder = document.getElementById(placeholderId);
@@ -71,6 +119,13 @@
                 this.backBtn = document.getElementById(backBtnId);
                 this.forwardBtn = document.getElementById(forwardBtnId);
                 this.slider = document.getElementById(sliderId);
+                this.showCurveBtn = document.getElementById(showCurveBtnId);
+                this.curveImg = document.getElementById(curveImgId);
+                this.curveSamples = document.getElementById(curveSamplesId);
+                this.curveSmooth = document.getElementById(curveSmoothId);
+                this.curvePanel = document.getElementById(curvePanelId);
+                this.downloadPoints = document.getElementById(downloadPointsId);
+                this.downloadJSON = document.getElementById(downloadJSONId);
 
                 this.frames = [];
                 this.currentFrame = 0;
@@ -88,6 +143,7 @@
                 this.backBtn.addEventListener("click", () => this._updateFrame(this.currentFrame - this.FRAMESKIP));
                 this.forwardBtn.addEventListener("click", () => this._updateFrame(this.currentFrame + this.FRAMESKIP));
                 this.slider.addEventListener("input", () => this._updateFrame(parseInt(this.slider.value)));
+                this.showCurveBtn.addEventListener("click", () => this._showCurve());
             }
 
             _previewSelected() {
@@ -97,6 +153,8 @@
                     this.previewImg.style.display = "block";
                     this.placeholder.style.display = "none";
                     this.animateBtn.disabled = false;
+                    this.showCurveBtn.disabled = true;
+                    this.curveImg.style.display = "none";
                 }
             }
 
@@ -116,6 +174,7 @@
                     this.csvFile = data.csv_file;
                     this._startLiveMJPEG(this.csvFile);
                     this._pollSnapshots();
+                    this.showCurveBtn.disabled = false;
                 } catch (err) {
                     console.error("Upload failed:", err);
                 }
@@ -131,6 +190,7 @@
                 this.slider.max = 0;
                 if (this.liveInterval) clearInterval(this.liveInterval);
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.curvePanel.style.display = "none";
             }
 
             _startLiveMJPEG(csvFile) {
@@ -177,6 +237,27 @@
                 this.backBtn.disabled = this.currentFrame === 0;
                 this.forwardBtn.disabled = this.currentFrame >= this.frames.length - 1;
             }
+
+            _showCurve() {
+                if (!this.csvFile) {
+                    alert("Upload and animate first");
+                    return;
+                }
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                const samples = Math.max(100, Math.min(20000, parseInt(this.curveSamples.value) || 1200));
+                const smooth = Math.max(0, Math.min(1000, parseFloat(this.curveSmooth.value) || 0));
+                // cache buster so the browser reloads new image
+                const ts = Date.now();
+                const url = `/spline_curve?csv_file=${encodeURIComponent(this.csvFile)}&width=${w}&height=${h}&samples=${samples}&smooth=${smooth}&thickness=4&ts=${ts}`;
+                this.curveImg.src = url;                        // large panel preview
+                this.curveImg.style.display = 'block';
+                this.curvePanel.style.display = "block";
+
+                // Set download links
+                this.downloadPoints.href = `/spline_points?csv_file=${encodeURIComponent(this.csvFile)}&samples=${samples}&smooth=${smooth}`;
+                this.downloadJSON.href = `/spline_json?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`;
+            }
         }
 
         new KolamAnimator({
@@ -187,7 +268,14 @@
             canvasId: "animationCanvas",
             backBtnId: "back20",
             forwardBtnId: "forward20",
-            sliderId: "frameSlider"
+            sliderId: "frameSlider",
+            showCurveBtnId: "show-curve",
+            curveImgId: "curvePreview",
+            curveSamplesId: "curve-samples",
+            curveSmoothId: "curve-smooth",
+            curvePanelId: "curve-panel",
+            downloadPointsId: "downloadPoints",
+            downloadJSONId: "downloadJSON"
         });
     </script>
 </body>
