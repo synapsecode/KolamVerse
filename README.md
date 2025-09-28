@@ -21,9 +21,39 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 - Rule 7 : Kolam is completed when all points are enclosed by the drawing line
 
 ## Execution
-1. (First-Time) `python3 -m venv venv`
-2. (First-Time) `pip install -r requirements.txt`
-3. (To Run the entire application): `uvicorn main:app --host 0.0.0.0 --port 3011`
+1. Create venv (first time)
+	- Windows PowerShell: `python -m venv venv; .\venv\Scripts\Activate.ps1`
+	- macOS/Linux: `python3 -m venv venv; source venv/bin/activate`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Copy `.env.example` to `.env` and set `GEMINI_API_KEY` (optional; without it AI narration falls back to offline narration)
+4. Run server (development): `uvicorn main:app --reload --port 8000`
+5. Open:
+	- KolamDraw:  http://127.0.0.1:8000/kolamdraw
+	- KolamTrace: http://127.0.0.1:8000/kolamtrace
+
+If `PyTurboJPEG` native library is missing the app transparently falls back to OpenCV JPEG encoding.
+
+### Environment Variables
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| GEMINI_API_KEY | No | Enables Gemini-based AI narration & prompt→seed generation. Without it offline narration is used. |
+
+`GEMINI_API_KEY` is read from `.env` (UTF-8, no BOM). Never commit the real key.
+
+### Typical Workflow
+1. Modify code / HTML in `static/` or JS in `assets/`.
+2. Run locally & verify both pages.
+3. Commit changes on a feature branch: `git add . && git commit -m "feat: ..."`
+4. Push & open a Pull Request (PR) against the main branch.
+
+### PR Checklist
+- [ ] No merge conflict markers remain
+- [ ] `.env` NOT committed (verify with `git status`)
+- [ ] New assets referenced correctly (cache-busting if needed)
+- [ ] Manual smoke test: upload image, view animation, description + narration
+- [ ] Seed generation & narration working on KolamDraw page
+
+---
 
 
 Deprecated (Inside legacy_code)
@@ -38,3 +68,15 @@ Review Tips:
 3.⁠ ⁠⁠implement the image to natural language (user pus kolam and they get a design description)
 5.⁠ ⁠⁠implement the splines part into the webview itself and dont use dots tery to make those dots into a mathematical curve
 8.⁠ ⁠⁠add more screenshorts and links to ppt
+
+## Security / Secrets
+- Do not commit `.env` (listed in `.gitignore`).
+- Use `.env.example` for documentation of required variables.
+
+## Troubleshooting
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Raw CSS/JS showing at top of page | Malformed `<head>` or stray style outside `<head>` | Fixed; ensure only one `<head>` tag and externalize scripts |
+| `RuntimeError: Unable to locate turbojpeg library` | Missing native libjpeg-turbo | Fallback now uses OpenCV; optionally install system libjpeg-turbo for performance |
+| BOM / UnicodeDecodeError when loading `.env` | File saved with UTF-16 or BOM | Recreate `.env` in UTF-8 without BOM; helper strips BOM defensively |
+| AI narration always offline | Missing or invalid `GEMINI_API_KEY` | Set valid key in `.env` and restart server |

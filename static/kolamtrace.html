@@ -1,15 +1,5 @@
-<<<<<<< Updated upstream
 <!DOCTYPE html>
 <html lang="en">
-=======
-<form id="uploadForm">
-    <label for="fileInput" class="visually-hidden">Select a kolam image to upload</label>
-    <input type="file" id="fileInput" name="file" accept="image/*" required aria-describedby="fileHelp" />
-    <button type="submit" aria-label="Upload selected kolam image and start animation">Upload & Animate</button>
-    <div id="fileHelp" class="sr-hint">Choose a kolam / rangoli image (PNG or JPEG) to analyze and animate.</div>
-</form>
->>>>>>> Stashed changes
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,8 +7,27 @@
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/kolamtrace.css">
+    <style>
+        /* Extension styles for narration panel matching existing palette */
+        #descriptionSection { display:none; max-width:1200px; margin:40px auto; background:#23262e; border:1px solid #2d333b; border-radius:28px; padding:28px 34px 34px; box-shadow:0 2px 34px rgba(12,18,22,0.4); }
+        #descriptionSection.show { display:block; animation:fadeIn .25s ease-in; }
+        @keyframes fadeIn { from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:translateY(0);} }
+        #kolamDescription { margin:0; padding:18px 20px; background:#191e24; border:1px solid #2a3036; border-radius:14px; font-size:14px; line-height:1.55; max-height:320px; overflow:auto; white-space:pre-wrap; color:#d5dde4; box-shadow:inset 0 0 0 1px #1f2429; }
+        .desc-header { display:flex; flex-wrap:wrap; gap:26px; align-items:flex-start; }
+        .desc-header h2 { margin:0 0 6px; font-size:22px; font-weight:600; letter-spacing:.5px; color:#78f5c6; }
+        .narration-mode { background:#191e24; border:1px solid #30363d; padding:12px 16px 10px; border-radius:14px; }
+        .narration-mode fieldset { border:none; margin:0; padding:0; }
+        .narration-mode legend { font-size:12px; letter-spacing:1px; color:#9fb4c3; margin-bottom:6px; }
+        .narration-mode label { display:block; font-size:12.5px; margin:4px 0; color:#c9d1d9; }
+        .narration-mode input { margin-right:6px; }
+        .source-tag { display:inline-block; background:#30363d; color:#9fb4c3; font-size:11px; letter-spacing:.8px; padding:5px 10px; border-radius:20px; }
+        .loading-description { background:#1c2128; border:1px solid #30363d; padding:14px 18px; border-radius:12px; font-style:italic; color:#8b949e; }
+        @media (max-width:1000px){ #descriptionSection { margin:28px 18px; border-radius:20px; padding:22px 24px 26px; } }
+            .hidden { display:none; }
+            .flex-grow { flex:1; }
+            .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); border:0; }
+    </style>
 </head>
-
 <body>
     <div class="trace-bar">
         <div class="brand">
@@ -35,14 +44,12 @@
         </div>
         <span class="section-title">KolamTrace</span>
     </div>
-<<<<<<< Updated upstream
 
     <div class="main-flex">
-        <!-- Upload Side -->
         <div class="upload-side">
             <h2>1. Upload Kolam Image</h2>
             <div class="img-slot" id="preview-box">
-                <img id="preview-img" src="" alt="Your image preview" style="display: none;" />
+            <img id="preview-img" class="hidden" src="" alt="Your image preview" />
                 <span class="slot-placeholder" id="preview-placeholder">No image uploaded</span>
             </div>
             <label class="upload-label" for="kolam-upload">Choose Image
@@ -50,449 +57,38 @@
             </label>
             <div class="info">JPG, PNG • Max 2MB</div>
         </div>
-
-        <!-- Animation Panel -->
         <div class="anim-panel">
             <h2>2. Kolam Animation</h2>
             <div class="anim-area" id="anim-area">
-                <div class="anim-placeholder" id="anim-placeholder">
-                    Upload a Kolam image and press <b>Animate</b> to view the tracing animation!
-                </div>
+                <div class="anim-placeholder" id="anim-placeholder">Upload a Kolam image and press <b>Animate</b> to view the tracing animation!</div>
                 <canvas id="animationCanvas" width="410" height="340"></canvas>
             </div>
             <div class="actions">
                 <button id="animate-btn" disabled>Animate</button>
                 <button id="back20" disabled>&laquo; 20 Frames</button>
-                <input type="range" id="frameSlider" min="0" max="0" value="0" style="flex: 1;">
+            <label for="frameSlider" class="visually-hidden">Frame position</label>
+            <input type="range" id="frameSlider" min="0" max="0" value="0" class="flex-grow" title="Frame position" />
                 <button id="forward20" disabled>20 Frames &raquo;</button>
             </div>
-=======
-    <div>
-        <h3>Kolam Animation</h3>
-        <canvas id="animationCanvas" width="400" height="400"></canvas>
-        <div class="nav-controls">
-            <button id="back20" disabled>« 20 Frames</button>
-            <button id="forward20" disabled>20 Frames »</button>
->>>>>>> Stashed changes
         </div>
     </div>
 
-<<<<<<< Updated upstream
-    <script>
-        class KolamAnimator {
-            constructor({ fileInputId, previewImgId, placeholderId, animateBtnId, canvasId, backBtnId, forwardBtnId, sliderId }) {
-                this.fileInput = document.getElementById(fileInputId);
-                this.previewImg = document.getElementById(previewImgId);
-                this.placeholder = document.getElementById(placeholderId);
-                this.animateBtn = document.getElementById(animateBtnId);
-                this.canvas = document.getElementById(canvasId);
-                this.ctx = this.canvas.getContext("2d");
-                this.backBtn = document.getElementById(backBtnId);
-                this.forwardBtn = document.getElementById(forwardBtnId);
-                this.slider = document.getElementById(sliderId);
-=======
-<!-- Moved description section below both columns for better layout -->
-<div class="description-wrapper">
-  <section id="descriptionSection" aria-live="polite" aria-label="Kolam Description Panel">
-    <div class="desc-header">
-      <h2>Kolam Description</h2>
-      <div class="narration-mode" role="group" aria-label="Narration Mode Selection">
-        <fieldset>
-          <legend>Narration Mode</legend>
-          <label><input type="radio" name="nmode" value="offline" checked> Offline (no AI)</label>
-          <label><input type="radio" name="nmode" value="auto"> Auto (AI w/ fallback)</label>
-          <label><input type="radio" name="nmode" value="ai"> Force AI</label>
-        </fieldset>
-      </div>
-    </div>
-    <div class="meta-row"><span id="narrationSource" class="source-tag" hidden></span></div>
-    <pre id="kolamDescription"></pre>
-  </section>
-</div>
+    <section id="descriptionSection" aria-live="polite" aria-label="Kolam Description Panel">
+        <div class="desc-header">
+            <h2>Kolam Description</h2>
+            <div class="narration-mode" role="group" aria-label="Narration Mode Selection">
+                <fieldset>
+                    <legend>NARRATION MODE</legend>
+                    <label><input type="radio" name="nmode" value="offline" checked> Offline (no AI)</label>
+                    <label><input type="radio" name="nmode" value="auto"> Auto (AI w/ fallback)</label>
+                    <label><input type="radio" name="nmode" value="ai"> Force AI</label>
+                </fieldset>
+            </div>
+            <span id="narrationSource" class="source-tag" hidden></span>
+        </div>
+        <pre id="kolamDescription"></pre>
+    </section>
 
-<style>
-    .preview-container {
-        display: flex;
-        gap: 20px;
-        margin-top: 20px;
-    }
->>>>>>> Stashed changes
-
-                this.frames = [];
-                this.currentFrame = 0;
-                this.liveInterval = null;
-                this.navImg = new Image();
-                this.FRAMESKIP = 20;
-                this.csvFile = null;
-
-<<<<<<< Updated upstream
-                this._bindEvents();
-=======
-    .preview-container img,
-    .preview-container canvas {
-        max-width: 400px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-    }
-
-    button {
-        margin: 2px;
-    }
-
-    .nav-controls { 
-        margin-top: 10px; 
-    }
-
-    /* Accessibility helper classes */
-    .visually-hidden { 
-        position: absolute; 
-        width: 1px; 
-        height: 1px; 
-        padding: 0; 
-        margin: -1px; 
-        overflow: hidden; 
-        clip: rect(0 0 0 0); 
-        border: 0; 
-    }
-    .sr-hint { 
-        font-size: 12px; 
-        color: #555; 
-        margin-top: 4px; 
-    }
-
-    .description-wrapper { 
-        margin-top: 32px; 
-        display: flex; 
-        justify-content: flex-start; 
-    }
-    #descriptionSection { 
-        display:none; 
-        width:100%; 
-        max-width: 840px; 
-        background:#f8f9fa; 
-        border:1px solid #e2e6ea; 
-        border-radius:12px; 
-        padding:18px 22px 22px; 
-        box-shadow:0 2px 6px rgba(0,0,0,0.08);
-    }
-    #descriptionSection.show { display:block; animation:fadeIn .25s ease-in; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(4px);} to {opacity:1; transform:translateY(0);} }
-
-    #kolamDescription {
-        padding:14px 16px; 
-        background:#ffffff; 
-        border:1px solid #e9ecef; 
-        border-radius:10px; 
-        font-size:14px; 
-        line-height:1.55; 
-        color:#2f3438; 
-        max-height:300px; 
-        overflow:auto; 
-        white-space:pre-wrap; 
-    }
-
-    #descriptionSection h4 {
-        color: #2d3e50;
-        margin-bottom: 10px;
-        font-size: 16px;
-    }
-
-    .loading-description {
-        padding: 15px;
-        background: #e3f2fd;
-        border: 1px solid #bbdefb;
-        border-radius: 8px;
-        font-style: italic;
-        color: #1976d2;
-    }
-
-    .desc-header { display:flex; flex-wrap:wrap; align-items:flex-start; gap:24px; }
-    .desc-header h2 { margin:0 0 8px; font-size:22px; font-weight:600; letter-spacing:.5px; }
-    .narration-mode { 
-        margin:0; padding:10px 14px 8px; 
-        background:#f1f3f5; 
-        border:1px solid #ced4da; 
-        border-radius:10px; 
-        min-width:220px; 
-    }
-
-    .narration-mode fieldset {
-        border: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .narration-mode label { display:block; margin:4px 0; font-size:13px; }
-    .narration-mode input { margin-right:6px; }
-    .meta-row { margin:4px 0 10px; }
-    .source-tag { 
-        display:inline-block; 
-        background:#e9ecef; 
-        color:#495057; 
-        font-size:11px; 
-        text-transform:uppercase; 
-        letter-spacing:.7px; 
-        padding:4px 8px; 
-        border-radius:6px; 
-    }
-    .loading-description { background:#fffbe6; border-color:#ffe58f; color:#ad6800; }
-
-    .small {
-        font-size: 12px;
-        color: #868e96;
-    }
-
-    .muted {
-        color: #adb5bd !important;
-    }
-</style>
-
-<script>
-    const form = document.getElementById("uploadForm");
-    const fileInput = document.getElementById("fileInput");
-    const selectedImg = document.getElementById("selected");
-    const canvas = document.getElementById("animationCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const back20Btn = document.getElementById("back20");
-    const forward20Btn = document.getElementById("forward20");
-
-    let frames = [];
-    let currentFrame = 0;
-    let liveInterval = null;
-    let navImg = new Image(); // single img for navigation
-
-    fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
-        if (file) selectedImg.src = URL.createObjectURL(file);
-    });
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const file = fileInput.files[0];
-        if (!file) return alert("Select a file.");
-
-        // Reset frontend state
-        frames = [];
-        currentFrame = 0;
-        back20Btn.disabled = true;
-        forward20Btn.disabled = true;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        selectedImg.src = URL.createObjectURL(file);
-
-        // Get kolam description first
-        await getKolamDescription(file);
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/upload_kolam", { method: "POST", body: formData });
-        const data = await res.json();
-        if (data.error) return alert("Error: " + data.error);
-
-        // Clear previous live MJPEG
-        if (liveInterval) clearInterval(liveInterval);
-
-        // Show live MJPEG
-        const streamImg = new Image();
-        streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(data.csv_file)}`;
-        streamImg.crossOrigin = "anonymous";
-
-        liveInterval = setInterval(() => {
-            try { ctx.drawImage(streamImg, 0, 0, canvas.width, canvas.height); }
-            catch (e) { }
-        }, 30);
-
-        // Poll for snapshots (accept 202 as pending instead of treating as error)
-        const pollSnapshots = async () => {
-            try {
-                const snapRes = await fetch(`/kolam_snapshots?ts=${Date.now()}`);
-                if (snapRes.status === 202) { // pending
-                    setTimeout(pollSnapshots, 3000);
-                    return;
-                }
-                if (!snapRes.ok) { setTimeout(pollSnapshots, 4000); return; }
-                const snapData = await snapRes.json();
-                if (snapData.status !== 'ready') { setTimeout(pollSnapshots, 3000); return; }
-                frames = snapData.frames;
-                currentFrame = frames.length - 1;
-                clearInterval(liveInterval);
-                navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
-                navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
-                back20Btn.disabled = false;
-                forward20Btn.disabled = false;
-            } catch (err) {
-                setTimeout(pollSnapshots, 4000);
->>>>>>> Stashed changes
-            }
-
-<<<<<<< Updated upstream
-            _bindEvents() {
-                this.fileInput.addEventListener("change", () => this._previewSelected());
-                this.animateBtn.addEventListener("click", () => this._handleUpload());
-                this.backBtn.addEventListener("click", () => this._updateFrame(this.currentFrame - this.FRAMESKIP));
-                this.forwardBtn.addEventListener("click", () => this._updateFrame(this.currentFrame + this.FRAMESKIP));
-                this.slider.addEventListener("input", () => this._updateFrame(parseInt(this.slider.value)));
-            }
-
-            _previewSelected() {
-                const file = this.fileInput.files[0];
-                if (file) {
-                    this.previewImg.src = URL.createObjectURL(file);
-                    this.previewImg.style.display = "block";
-                    this.placeholder.style.display = "none";
-                    this.animateBtn.disabled = false;
-                }
-            }
-
-            async _handleUpload() {
-                const file = this.fileInput.files[0];
-                if (!file) return alert("Select a file.");
-                this._resetState();
-                this.previewImg.src = URL.createObjectURL(file);
-
-                try {
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    const res = await fetch("/upload_kolam", { method: "POST", body: formData });
-                    const data = await res.json();
-                    if (data.error) return alert("Error: " + data.error);
-
-                    this.csvFile = data.csv_file;
-                    this._startLiveMJPEG(this.csvFile);
-                    this._pollSnapshots();
-                } catch (err) {
-                    console.error("Upload failed:", err);
-                }
-            }
-
-            _resetState() {
-                this.frames = [];
-                this.currentFrame = 0;
-                this.backBtn.disabled = true;
-                this.forwardBtn.disabled = true;
-                this.animateBtn.disabled = true;
-                this.slider.value = 0;
-                this.slider.max = 0;
-                if (this.liveInterval) clearInterval(this.liveInterval);
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-
-            _startLiveMJPEG(csvFile) {
-                if (this.liveInterval) clearInterval(this.liveInterval);
-                const streamImg = new Image();
-                streamImg.src = `/animate_kolam?csv_file=${encodeURIComponent(csvFile)}`;
-                streamImg.crossOrigin = "anonymous";
-
-                this.liveInterval = setInterval(() => {
-                    try { this.ctx.drawImage(streamImg, 0, 0, this.canvas.width, this.canvas.height); }
-                    catch (e) { }
-                }, 30);
-            }
-
-            async _pollSnapshots() {
-                try {
-                    const snapRes = await fetch(`/kolam_snapshots`);
-                    if (!snapRes.ok) { setTimeout(() => this._pollSnapshots(), 4000); return; }
-
-                    const snapData = await snapRes.json();
-                    this.frames = snapData.frames;
-                    this.currentFrame = this.frames.length - 1;
-
-                    clearInterval(this.liveInterval);
-                    this._updateFrame(this.currentFrame);
-
-                    // Enable controls
-                    this.slider.max = this.frames.length - 1;
-                    this.slider.value = this.currentFrame;
-                } catch (err) {
-                    setTimeout(() => this._pollSnapshots(), 4000);
-                }
-            }
-
-            _updateFrame(idx) {
-                if (this.frames.length === 0) return;
-                this.currentFrame = Math.max(0, Math.min(idx, this.frames.length - 1));
-                this.navImg.onload = () => this.ctx.drawImage(this.navImg, 0, 0, this.canvas.width, this.canvas.height);
-                this.navImg.src = "data:image/jpeg;base64," + this.frames[this.currentFrame];
-
-                // Update slider and buttons
-                this.slider.value = this.currentFrame;
-                this.backBtn.disabled = this.currentFrame === 0;
-                this.forwardBtn.disabled = this.currentFrame >= this.frames.length - 1;
-            }
-        }
-
-        new KolamAnimator({
-            fileInputId: "kolam-upload",
-            previewImgId: "preview-img",
-            placeholderId: "preview-placeholder",
-            animateBtnId: "animate-btn",
-            canvasId: "animationCanvas",
-            backBtnId: "back20",
-            forwardBtnId: "forward20",
-            sliderId: "frameSlider"
-        });
-    </script>
+    <script src="/assets/kolamtrace.js"></script>
 </body>
-
 </html>
-=======
-    async function getKolamDescription(file) {
-        try {
-            const descEl = document.getElementById("kolamDescription");
-            const section = document.getElementById("descriptionSection");
-            section.classList.add('show');
-            descEl.textContent = "Analyzing kolam pattern...";
-            descEl.className = "loading-description";
-            const formData = new FormData();
-            formData.append("file", file);
-            // Always start with structural description
-            const response = await fetch("/describe_kolam", { method: "POST", body: formData });
-            const result = await response.json();
-            descEl.className = "";
-            if (result.success && result.description) {
-                descEl.textContent = result.description; // baseline
-            } else {
-                descEl.textContent = `Error: ${result.error || "Unable to analyze this kolam image."}`;
-                return; // abort AI/Offline narration if base fails
-            }
-            // Then attempt narration overlay (unless user strictly wants only offline heuristic which is still handled by AI endpoint w/ mode=offline)
-            const mode = getSelectedNarrationMode();
-            const narrFd = new FormData(); narrFd.append('file', file);
-            const params = new URLSearchParams({include_image:'false', compress:'true', mode: mode});
-            const narrRes = await fetch('/describe_kolam_ai?'+params.toString(), {method:'POST', body: narrFd});
-            const narrJson = await narrRes.json();
-            const sourceEl = document.getElementById('narrationSource');
-            if(narrJson.narration){
-                // Append a separator line before narration if different
-                if(narrJson.narration.trim() !== result.description.trim()){
-                    descEl.textContent += '\n\nNarrated Drawing Flow:\n' + narrJson.narration;
-                }
-                sourceEl.hidden = false;
-                sourceEl.textContent = (narrJson.source|| (narrJson.ai_used? 'AI':'Offline')).toUpperCase();
-            }
-        } catch (error) {
-            const descEl = document.getElementById("kolamDescription");
-            descEl.className = "";
-            descEl.textContent = "Error: Failed to connect to server. Please make sure the server is running.";
-        }
-    }
-
-    function updateFrame(idx) {
-        if (frames.length === 0) return;
-        currentFrame = Math.max(0, Math.min(idx, frames.length - 1));
-        navImg.onload = () => ctx.drawImage(navImg, 0, 0, canvas.width, canvas.height);
-        navImg.src = "data:image/jpeg;base64," + frames[currentFrame];
-    }
-
-    back20Btn.addEventListener("click", () => updateFrame(currentFrame - 20));
-    forward20Btn.addEventListener("click", () => updateFrame(currentFrame + 20));
-
-    function getSelectedNarrationMode(){
-      const sel = document.querySelector('input[name="nmode"]:checked');
-      return sel ? sel.value : 'offline';
-    }
-</script>
->>>>>>> Stashed changes

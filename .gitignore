@@ -1,12 +1,19 @@
 
 media
-<<<<<<< Updated upstream
 deploy.sh
 
-=======
+# Environment / secrets
 .env
-__pycache__
->>>>>>> Stashed changes
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# Virtual environments
+venv/
 
 # ------------- PYTHON ---------------
 
