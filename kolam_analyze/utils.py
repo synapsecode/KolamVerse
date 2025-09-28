@@ -1,9 +1,9 @@
 import base64
+import cv2
+import numpy as np
+import json
 
-def _render_path_png(path, size: int = 800):
-    """Render full path to a PNG (single frame) and return base64 string."""
-    import cv2
-    import numpy as np
+def render_path_png(path, size: int = 800):
     canvas = np.full((size, size, 3), (46, 95, 59), dtype=np.uint8)
     xs = [p[0] for e in path for p in e]
     ys = [p[1] for e in path for p in e]
@@ -25,12 +25,7 @@ def _render_path_png(path, size: int = 800):
     return base64.b64encode(buf.tobytes()).decode("utf-8")
 
 
-def _compress_semantics(raw_json: str, max_steps: int = 60) -> str:
-    """Reduce semantics JSON size by keeping metadata and sampling steps.
-
-    We parse the JSON manually (defensive) and down-sample steps if needed.
-    """
-    import json
+def compress_semantics(raw_json: str, max_steps: int = 60) -> str:
     try:
         data = json.loads(raw_json)
     except Exception:

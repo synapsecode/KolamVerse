@@ -6,7 +6,7 @@ from typing import Optional
 from .kolam_semantics import semantic_json_string
 from .narration_cache import AINarrationCache
 from .offline_narrator import offline_narrate
-from .utils import _compress_semantics, _render_path_png
+from .utils import compress_semantics, render_path_png
 from .kolam_analyzer import analyze_kolam_image
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,7 +30,7 @@ def describe_kolam_characteristics(fileobject, filepath):
 
 def convert_eulerian_path_to_semantics(path, compress=True):
     semantics = semantic_json_string(path)
-    semantics_ai = _compress_semantics(semantics) if compress else semantics
+    semantics_ai = compress_semantics(semantics) if compress else semantics
     sem_hash = hashlib.sha256(semantics_ai.encode("utf-8")).hexdigest()
     return (semantics, semantics_ai, sem_hash)
 
@@ -63,7 +63,7 @@ async def describe_kolam_using_ai(
             )
 
         # ---- Step 6: AI narration attempt ----
-        img_b64 = _render_path_png(eulerian_path) if include_image else None
+        img_b64 = render_path_png(eulerian_path) if include_image else None
         try:
             narration = generate_kolam_narration(semantics_ai, img_b64)
             await AINarrationCache.add(key=sem_hash, value=narration)

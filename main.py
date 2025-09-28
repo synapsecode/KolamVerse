@@ -13,6 +13,11 @@ from kolam_frame_manager import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
 from kolamdraw_web import draw_kolam_web_bytes
 from utils import load_ai_prompt_template
+from dotenv import load_dotenv
+
+# Load Environment Variables
+load_dotenv()
+
 app = FastAPI()
 kolam_frame_manager = KolamFrameManager()
 
@@ -21,26 +26,6 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
-# --- simple .env loader (no external dependency) ---
-def _load_env_file(path: str = ".env"):
-    if not os.path.exists(path):
-        return
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                if k not in os.environ:  # don't override existing
-                    os.environ[k.strip()] = v.strip()
-    except Exception:
-        pass
-
-_load_env_file()
-
-# In-memory narration cache {hash(semantics_json): narration_text}
-_AI_NARRATION_CACHE: Dict[str, str] = {}
 
 
 @app.get("/", response_class=HTMLResponse)
