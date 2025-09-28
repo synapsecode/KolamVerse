@@ -3,6 +3,8 @@ class KolamAnimator {
         this.fileInput = document.getElementById(cfg.fileInputId);
         this.previewImg = document.getElementById(cfg.previewImgId);
         this.placeholder = document.getElementById(cfg.placeholderId);
+        this.animPlaceholder = document.getElementById(cfg.animPlaceholderId)
+        this.shimmerLoader = document.getElementById(cfg.shimmerLoaderId)
         this.animateBtn = document.getElementById(cfg.animateBtnId);
         this.canvas = document.getElementById(cfg.canvasId);
         this.ctx = this.canvas.getContext('2d');
@@ -54,8 +56,10 @@ class KolamAnimator {
     }
 
     async _handleUpload() {
+        this.shimmerLoader.style.display = "flex";
         const file = this.fileInput.files[0];
         if (!file) return alert('Select a file.');
+        this.animPlaceholder.style.display = "none";
         this._resetState();
         this.previewImg.src = URL.createObjectURL(file);
         getKolamDescription(file).catch(() => { });
@@ -68,6 +72,7 @@ class KolamAnimator {
             if (data.error) return alert('Error: ' + data.error);
 
             this.csvFile = data.csv_file;
+            this.shimmerLoader.style.display = "none";
             this._startLiveMJPEG(this.csvFile);
             this._pollSnapshots();
             this.showCurveBtn.disabled = false; // ✅ enable curve button after upload
@@ -192,10 +197,10 @@ async function getKolamDescription(file) {
         const descEl = document.getElementById('kolamDescription');
         const section = document.getElementById('descriptionSection');
         section.classList.add('show');
-        section.style.display = 'block';
         descEl.textContent = 'Analyzing kolam pattern...';
         descEl.className = 'loading-description';
 
+        section.style.display = 'block'; section.style.marginBottom = '60px'
         const fd = new FormData();
         fd.append('file', file);
         const baseRes = await fetch('/describe_kolam', { method: 'POST', body: fd });
@@ -252,5 +257,8 @@ new KolamAnimator({
     curveSmoothId: "curve-smooth",
     curvePanelId: "curve-panel",
     downloadPointsId: "downloadPoints",
-    downloadJSONId: "downloadJSON"
+    downloadJSONId: "downloadJSON",
+    animPlaceholderId: 'anim-placeholder',
+    animateBtnId: 'animate-btn',
+    shimmerLoaderId: 'shimmer-loader'
 });
