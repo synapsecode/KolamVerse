@@ -1,6 +1,19 @@
 
 media
+deploy.sh
 
+# Environment / secrets
+.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# Virtual environments
+venv/
 
 # ------------- PYTHON ---------------
 
@@ -31,6 +44,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+venv/
 
 # PyInstaller
 #   Usually these files are written by a python script from a template

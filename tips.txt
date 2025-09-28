@@ -1,0 +1,9 @@
+-----Certbot SSL-----
+1. sudo apt install certbot python3-certbot-nginx -y
+2. server_name kolamverse.ydns.eu;
+3. sudo systemctl reload nginx
+4. sudo certbot --nginx -d kolamverse.ydns.eu
+
+------Google Cloud Artefact Registry-------
+docker tag kolamverse asia-south1-docker.pkg.dev/kolamverse/kolamverse/kolamverse
+docker push asia-south1-docker.pkg.dev/kolamverse/kolamverse/kolamverse         
