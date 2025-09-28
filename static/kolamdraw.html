@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KolamDraw</title>
-    <style>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KolamDraw | KolamVerse</title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+  <style>
       body {
         margin: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -167,33 +168,29 @@
         }
       }
 
+      #narrationPanel { margin-top:28px; display:none; }
+      #narrationPanel h3 { margin:0 0 12px; font-size:18px; color:#58a6ff; }
+      #seedNarration { 
+          padding:14px 16px; background:#161b22; border:1px solid #30363d; border-radius:10px; 
+          font-size:14px; line-height:1.55; color:#c9d1d9; white-space:pre-wrap; box-shadow:0 2px 4px rgba(0,0,0,0.25);
+          max-height:300px; overflow:auto;
+      }
+      .loading { background:#1c2128; border-color:#30363d !important; color:#8b949e; }
+  .divider { width:100%; border-top:1px solid #30363d; margin:20px 0; border-bottom:none; border-left:none; border-right:none; }
+  .hidden { display:none; }
+  .placeholder { color:#8b949e; font-style:italic; text-align:center; }
       /* Small screens */
       @media (max-width: 600px) {
-        body {
-          font-size: 0.9rem;
-        }
-        textarea {
-          font-size: 0.95rem;
-        }
-        button {
-          font-size: 0.95rem;
-          padding: 10px;
-        }
-        .trace-bar {
-          padding: 8px 20px;
-        }
-        .trace-bar .brand svg {
-          height: 32px;
-          width: 32px;
-        }
-        .trace-bar .section-title {
-          font-size: 1rem;
-        }
+        body { font-size: 0.9rem; }
+        textarea { font-size: 0.95rem; }
+        button { font-size: 0.95rem; padding: 10px; }
+        .trace-bar { padding: 8px 20px; }
+        .trace-bar .brand svg { height: 32px; width: 32px; }
+        .trace-bar .section-title { font-size: 1rem; }
       }
-    </style>
-  </head>
-
-  <body>
+  </style>
+</head>
+<body>
     <div class="trace-bar">
       <div class="brand">
         <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
@@ -215,88 +212,21 @@
         <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
 
         <button onclick="generateKolam()">Generate</button>
-        <hr style="width: 100%; border-top: 1px solid #ccc; margin: 20px 0" />
-
-        <textarea id="prompt-input" placeholder="Enter your prompt (e.g. Make it more round, a flower with 6 petals, an intricate weaving pattern)"></textarea>
-        <button id="prompt-button" onclick="generateFromPrompt()">Generate from Prompt</button>
+  <hr class="divider" />
+        <textarea id="prompt-input" placeholder="Describe the pattern you want (e.g. A flower with 6 petals, weaving symmetry, more rounded)"></textarea>
+        <button id="prompt-button" onclick="generateFromPrompt()">Generate Seed From Prompt</button>
         <div id="loader" class="loader">Generating seed...</div>
+        <div id="narrationPanel">
+          <h3>Pattern Narration</h3>
+          <div id="seedNarration"></div>
+        </div>
       </div>
       <div class="right-pane">
-        <img id="kolamImage" src="" alt="Generated Kolam will appear here" style="display: none" />
-        <div id="placeholderText" style="color: #8b949e; font-style: italic; text-align: center">Enter a prompt or seed and click Generate to create a Kolam.</div>
+  <img id="kolamImage" class="hidden" src="" alt="Generated Kolam will appear here" />
+  <div id="placeholderText" class="placeholder">Enter a seed or prompt to begin.</div>
       </div>
     </div>
 
-    <script>
-      function generateKolam() {
-        const seed = document.getElementById('prompt').value.trim();
-        if (!seed) {
-          alert('Please enter a seed first.');
-          return;
-        }
-
-        // Add timestamp so browser doesn’t cache old image
-        const ts = Date.now();
-
-        // Point directly to FastAPI endpoint
-        const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
-
-        // Update image src
-        document.getElementById('kolamImage').src = url;
-        document.getElementById('kolamImage').style.display = 'block';
-        document.getElementById('placeholderText').style.display = 'none';
-      }
-
-      async function generateFromPrompt() {
-        const prompt = document.getElementById('prompt-input').value.trim();
-        if (!prompt) {
-          alert('Please enter a prompt first.');
-          return;
-        }
-
-        const loader = document.getElementById('loader');
-        const seedInput = document.getElementById('prompt-input'); // Fixed: should be the seed textarea
-        const promptInput = document.getElementById('prompt');
-        const promptButton = document.getElementById('prompt-button');
-
-        // Show loader and disable button
-        loader.style.display = 'block';
-        promptButton.disabled = true;
-
-        console.log(seedInput.value);
-
-        try {
-          const response = await fetch('/generate_seed_from_prompt', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ prompt: prompt }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate seed.');
-          }
-
-          console.log('Response received from server');
-
-          const data = await response.json();
-
-          // Update the seed input with the AI's response
-          promptInput.value = data.seed; // Fixed: should update the seed textarea
-
-          // Automatically generate the Kolam with the new seed
-          generateKolam();
-        } catch (error) {
-          console.error('Error:', error);
-          alert(`An error occurred: ${error.message}`);
-        } finally {
-          // Hide loader and re-enable button
-          loader.style.display = 'none';
-          promptButton.disabled = false;
-        }
-      }
-    </script>
+    <script src="/assets/kolamdraw.js"></script>
   </body>
 </html>
