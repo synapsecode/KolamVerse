@@ -165,7 +165,21 @@
           max-width: 100%;
           height: auto;
         }
+<<<<<<< Updated upstream
       }
+=======
+
+        #narrationPanel { margin-top:28px; display:none; }
+        #narrationPanel h3 { margin:0 0 12px; font-size:18px; color:#2d3e50; }
+        #seedNarration { 
+            padding:14px 16px; background:#ffffff; border:1px solid #e2e6ea; border-radius:10px; 
+            font-size:14px; line-height:1.55; color:#2f3438; white-space:pre-wrap; box-shadow:0 2px 4px rgba(0,0,0,0.08);
+            max-height:300px; overflow:auto;
+        }
+        .loading { background:#fffbe6; border-color:#ffe58f !important; color:#ad6800; }
+    </style>
+</head>
+>>>>>>> Stashed changes
 
       /* Small screens */
       @media (max-width: 600px) {
@@ -215,6 +229,7 @@
         <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
 
         <button onclick="generateKolam()">Generate</button>
+<<<<<<< Updated upstream
         <hr style="width: 100%; border-top: 1px solid #ccc; margin: 20px 0" />
 
         <textarea id="prompt-input" placeholder="Enter your prompt (e.g. Make it more round, a flower with 6 petals, an intricate weaving pattern)"></textarea>
@@ -233,6 +248,59 @@
         if (!seed) {
           alert('Please enter a seed first.');
           return;
+=======
+        
+        <div id="narrationPanel">
+            <h3>Pattern Narration</h3>
+            <div id="seedNarration"></div>
+        </div>
+    </div>
+    <div class="right-pane">
+        <img id="kolamImage" src="" alt="Generated Kolam will appear here">
+    </div>
+
+    <script>
+        async function generateKolam() {
+            const seed = document.getElementById("prompt").value.trim();
+            if (!seed) {
+                alert("Please enter a seed first.");
+                return;
+            }
+
+            // Add timestamp so browser doesn't cache old image
+            const ts = Date.now();
+
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
+
+            // Update image src
+            document.getElementById("kolamImage").src = url;
+            
+            // Get offline narration instead of technical seed description
+            await getSeedNarration(seed);
+        }
+
+        async function getSeedNarration(seed) {
+            try {
+                const panel = document.getElementById('narrationPanel');
+                const box = document.getElementById('seedNarration');
+                panel.style.display='block';
+                box.classList.add('loading');
+                box.textContent = 'Generating narration...';
+                const response = await fetch(`/narrate_seed?seed=${encodeURIComponent(seed)}&depth=2`);
+                const result = await response.json();
+                box.classList.remove('loading');
+                if(result.success && result.narration){
+                    box.textContent = result.narration;
+                } else {
+                    box.textContent = 'Error: '+ (result.error || 'Unable to narrate this seed.');
+                }
+            } catch (error) {
+                const box = document.getElementById('seedNarration');
+                box.classList.remove('loading');
+                box.textContent = 'Error: Failed to connect to server.';
+            }
+>>>>>>> Stashed changes
         }
 
         // Add timestamp so browser doesn’t cache old image

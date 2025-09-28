@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="v    <script>
+        function generateKolam() {
+            const seed = document.getElementById(    <script>
+        async function gene    <script>
+        async function generateKolam() {
+            const seed = document.getElementById("prompt").value.trim();
+            if (!seed) {
+                alert("Please enter a seed first.");
+                return;
+            }
+
+            // Add timestamp so browser doesn't cache old image
+            const ts = Date.now();
+
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
+
+            // Update image src
+            document.getElementById("kolamImage").src = url;
+            
+            // Get seed description
+            await getSeedDescription(seed);
+        }
+
+        async function getSeedDescription(seed) {
+            try {
+                // Show loading state
+                document.getElementById("seedDescription").innerHTML = "Analyzing seed pattern...";
+                document.getElementById("seedDescriptionSection").style.display = "block";
+
+                const response = await fetch(`/describe_seed?seed=${encodeURIComponent(seed)}`);
+                const result = await response.json();
+
+                if (result.success && result.description) {
+                    document.getElementById("seedDescription").innerHTML = result.description;
+                } else {
+                    console.error("Seed description failed:", result.error);
+                    document.getElementById("seedDescription").innerHTML = `Error: ${result.error || "Unable to analyze this seed pattern."}`;
+                }
+            } catch (error) {
+                console.error("Error getting seed description:", error);
+                document.getElementById("seedDescription").innerHTML = "Error: Failed to connect to server.";
+            }
+        }
+    </script>         const seed = document.getElementById("prompt").value.trim();
+            if (!seed) {
+                alert("Please enter a seed first.");
+                return;
+            }
+
+            // Add timestamp so browser doesn't cache old image
+            const ts = Date.now();
+
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
+
+            // Update image src
+            document.getElementById("kolamImage").src = url;
+            
+            // Get seed description
+            await getSeedDescription(seed);
+        }
+
+        async function getSeedDescription(seed) {
+            try {
+                // Show loading state
+                document.getElementById("seedDescription").innerHTML = "Analyzing seed pattern...";
+                document.getElementById("seedDescriptionSection").style.display = "block";
+
+                const response = await fetch(`/describe_seed?seed=${encodeURIComponent(seed)}`);
+                const result = await response.json();
+
+                if (result.success && result.description) {
+                    document.getElementById("seedDescription").innerHTML = result.description;
+                } else {
+                    console.error("Seed description failed:", result.error);
+                    document.getElementById("seedDescription").innerHTML = `Error: ${result.error || "Unable to analyze this seed pattern."}`;
+                }
+            } catch (error) {
+                console.error("Error getting seed description:", error);
+                document.getElementById("seedDescription").innerHTML = "Error: Failed to connect to server.";
+            }
+        }
+    </script>im();
+            if (!seed) {
+                alert("Please enter a seed first.");
+                return;
+            }
+
+            // Generate seed description
+            generateSeedDescription(seed);
+
+            // Add timestamp so browser doesn't cache old image
+            const ts = Date.now();
+
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
+
+            // Update image src
+            document.getElementById("kolamImage").src = url;
+        }
+
+        function generateSeedDescription(seed) {
+            let description = "This kolam pattern is generated using the L-system seed: " + seed + ". ";
+            
+            // Analyze the seed composition
+            const charCounts = {
+                'F': (seed.match(/F/g) || []).length,
+                'A': (seed.match(/A/g) || []).length,
+                'B': (seed.match(/B/g) || []).length,
+                'L': (seed.match(/L/g) || []).length,
+                'R': (seed.match(/R/g) || []).length
+            };
+
+            if (charCounts.F > 0) {
+                description += `The pattern includes ${charCounts.F} forward line segment${charCounts.F > 1 ? 's' : ''}. `;
+            }
+
+            if (charCounts.A > 0) {
+                description += `It contains ${charCounts.A} arc element${charCounts.A > 1 ? 's' : ''} that create smooth curved sections. `;
+            }
+
+            if (charCounts.B > 0) {
+                description += `The design incorporates ${charCounts.B} complex arc motif${charCounts.B > 1 ? 's' : ''} with intricate curved patterns. `;
+            }
+
+            if (charCounts.L > 0 || charCounts.R > 0) {
+                const turns = charCounts.L + charCounts.R;
+                description += `The pattern includes ${turns} directional change${turns > 1 ? 's' : ''} that create angular variations. `;
+            }
+
+            // Analyze pattern characteristics
+            const seedLength = seed.length;
+            if (seedLength <= 4) {
+                description += "This is a simple pattern with minimal complexity. ";
+            } else if (seedLength <= 8) {
+                description += "This represents a moderately complex kolam design. ";
+            } else {
+                description += "This creates an intricate kolam with high complexity. ";
+            }
+
+            // Check for repetition
+            const uniqueChars = [...new Set(seed)].length;
+            if (uniqueChars < seedLength / 2) {
+                description += "The seed shows repetitive elements that will create rhythmic patterns in the final design. ";
+            }
+
+            // Symmetry analysis
+            if (seed === seed.split('').reverse().join('')) {
+                description += "The seed is palindromic, which will result in symmetrical kolam patterns. ";
+            }
+
+            description += "When expanded through L-system iterations, this seed will generate a traditional kolam following the fundamental rules of continuous line drawing around dots.";
+
+            document.getElementById("seedDescription").innerHTML = description;
+            document.getElementById("seedDescriptionSection").style.display = "block";
+        }
+    </script>width=device-width, initial-scale=1.0">
+    <title>KolamDraw</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+        }
+
+        .left-pane {
+            width: 35%;
+            background: #f9fafb;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-pane h2 {
+            margin-bottom: 20px;
+            color: #2d3e50;
+            text-align: center;
+        }
+
+        textarea {
+            resize: none;
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            min-height: 120px;
+        }
+
+        button {
+            padding: 12px;
+            background: #2e5f3b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #23482d;
+        }
+
+        .right-pane {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #eef2f7;
+        }
+
+        .right-pane img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            border: 2px solid #ccc;
+            background: white;
+        }
+
+        #seedDescriptionSection {
+            margin-top: 20px;
+            display: none;
+        }
+
+        #seedDescriptionSection h3 {
+            color: #2d3e50;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        #seedDescription {
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: left;
+            color: #495057;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="left-pane">
+        <h2>KolamDraw</h2>
+        <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
+        <button onclick="generateKolam()">Generate</button>
+        
+        <div id="seedDescriptionSection">
+            <h3>Pattern Description</h3>
+            <div id="seedDescription"></div>
+        </div>
+    </div>
+    <div class="right-pane">
+        <img id="kolamImage" src="" alt="Generated Kolam will appear here">
+    </div>
+
+    <script>
+        function generateKolam() {
+            const seed = document.getElementById("prompt").value.trim();
+            if (!seed) {
+                alert("Please enter a seed first.");
+                return;
+            }
+
+            // Add timestamp so browser doesn’t cache old image
+            const ts = Date.now();
+
+            // Point directly to FastAPI endpoint
+            const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
+
+            // Update image src
+            document.getElementById("kolamImage").src = url;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,7 +1,12 @@
 
 media
+<<<<<<< Updated upstream
 deploy.sh
 
+=======
+.env
+__pycache__
+>>>>>>> Stashed changes
 
 # ------------- PYTHON ---------------
 
@@ -32,6 +37,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+venv/
 
 # PyInstaller
 #   Usually these files are written by a python script from a template
