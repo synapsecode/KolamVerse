@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Kolam Pattern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            color: #f3f4f6;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 220px;
+            padding: 1rem;
+            background-color: rgba(30, 30, 30, 0.9);
+            border-radius: 0.75rem;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-panel label {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        .control-panel input {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Controls -->
+    <div class="control-panel">
+        <h2 class="text-xl font-bold text-pink-400 mb-2">Kolam Controls</h2>
+        <label>Tile Size <input type="range" id="tsize" min="20" max="80" value="45"></label>
+        <label>Grid Size <input type="range" id="tnumber" min="3" max="30" value="10"></label>
+        <label>Rotation <input type="range" id="rotation" min="0" max="6.283" step="0.1" value="0.785"></label>
+        <label>Dot Density <input type="range" id="dotDensity" min="0.2" max="1" step="0.05" value="0.6"></label>
+        <button id="redraw" class="mt-3 w-full bg-pink-500 text-white py-1 rounded">Redraw</button>
+    </div>
+
+    <script>
+        let kolam;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            kolam = new Kolam();
+            generatePattern();
+
+            document.getElementById("redraw").onclick = () => {
+                kolam.tsize = parseInt(document.getElementById("tsize").value);
+                kolam.tnumber = parseInt(document.getElementById("tnumber").value);
+                kolam.rotation = parseFloat(document.getElementById("rotation").value);
+                kolam.dotDensity = parseFloat(document.getElementById("dotDensity").value);
+
+                generatePattern();
+            };
+            noLoop(); // only draw when asked
+        }
+
+        function draw() {
+            background(kolam.bgcolor);
+            kolam.display();
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            generatePattern();
+        }
+
+        function generatePattern() {
+            kolam.setupTiles();
+            kolam.configTiles();
+            kolam.drawTile();
+            redraw(); // force one draw()
+        }
+
+        class Kolam {
+            constructor() {
+                this.tsize = 45;
+                this.tnumber = 10;
+                this.rotation = QUARTER_PI;
+                this.dotDensity = 0.6;
+                this.bgcolor = color(random(20, 50), random(20, 50), random(20, 50));
+
+                this.link = [];
+                this.nlink = [];
+                this.pg = null;
+            }
+
+            setupTiles() {
+                this.pg = createGraphics(this.tsize * this.tnumber, this.tsize * this.tnumber);
+
+                this.link = [];
+                this.nlink = [];
+                for (let i = 0; i < (this.tnumber + 1); i++) {
+                    let row = Array(this.tnumber + 1).fill(1);
+                    this.link.push([...row]);
+                    this.nlink.push([...row]);
+                }
+            }
+
+            configTiles() {
+                for (let i = 0; i < this.nlink.length; i++) {
+                    for (let j = 0; j < this.nlink.length / 2; j++) {
+                        let l = (random(1) > this.dotDensity) ? 1 : 0;
+                        this.applySymmetry(i, j, l);
+                    }
+                }
+            }
+
+            applySymmetry(i, j, value) {
+                const n = this.nlink.length - 1;
+                // simple 4-way reflection symmetry
+                this.nlink[i][j] = value;
+                this.nlink[i][n - j] = value;
+                this.nlink[n - i][j] = value;
+                this.nlink[n - i][n - j] = value;
+            }
+
+            drawTile() {
+                this.pg.background(this.bgcolor);
+                this.pg.noFill();
+                this.pg.stroke(255);
+                this.pg.strokeWeight(5);
+                this.pg.strokeCap(SQUARE);
+
+                for (let i = 0; i < this.tnumber; i++) {
+                    for (let j = 0; j < this.tnumber; j++) {
+                        if ((i + j) % 2 === 0) {
+                            let tl = this.tsize / 2 * this.nlink[i][j];
+                            let tr = this.tsize / 2 * this.nlink[i + 1][j];
+                            let br = this.tsize / 2 * this.nlink[i + 1][j + 1];
+                            let bl = this.tsize / 2 * this.nlink[i][j + 1];
+
+                            this.pg.rect(
+                                i * this.tsize,
+                                j * this.tsize,
+                                this.tsize,
+                                this.tsize,
+                                tl, tr, br, bl
+                            );
+
+                            this.pg.point(
+                                i * this.tsize + this.tsize / 2,
+                                j * this.tsize + this.tsize / 2
+                            );
+                        }
+                    }
+                }
+            }
+
+            display() {
+                push();
+                translate(width / 2, height / 2);
+                rotate(this.rotation);
+                imageMode(CENTER);
+                image(this.pg, 0, 0);
+                pop();
+            }
+        }
+    </script>
+</body>
+
+</html>
