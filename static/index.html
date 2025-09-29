@@ -9,17 +9,11 @@
   <style>
     :root {
       --color-primary: #33ff9b;
-      /* neon green */
       --color-accent: #277550;
-      /* dark green */
       --color-bg-dark: #0d1117;
       --color-bg-light: #161b22;
       --color-text-light: #d4f7dc;
       --color-text-dark: #b7d2bd;
-    }
-
-    html {
-      scroll-behavior: smooth;
     }
 
     body {
@@ -28,7 +22,6 @@
       color: var(--color-text-light);
       line-height: 1.6;
       background-color: var(--color-bg-dark);
-      scroll-behavior: smooth;
     }
 
     a {
@@ -48,76 +41,44 @@
       background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg-dark) 100%);
       text-align: center;
       color: var(--color-text-light);
-      position: relative;
-      overflow: hidden;
     }
 
     .hero h1 {
       font-size: 3rem;
-      margin-bottom: 20px;
-      margin-top: 20px;
-      animation: fadeDown 1s ease forwards;
+      margin: 20px 0;
       color: var(--color-primary);
+      animation: fadeDown 1s ease forwards;
     }
 
     .hero p {
       font-size: 1.3rem;
-      margin-bottom: 30px;
+      margin: 0 auto 30px;
       max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      animation: fadeDown 1.3s ease forwards;
       color: var(--color-text-dark);
+    }
+
+    .hero .hero-btn,
+    .link-button {
+      display: inline-block;
+      margin: 8px;
+      padding: 13px 28px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .hero .hero-btn {
       background: var(--color-primary);
       color: var(--color-bg-dark);
-      padding: 14px 32px;
-      border-radius: 14px;
-      font-size: 1.12rem;
-      margin-right: 12px;
-      margin-bottom: 12px;
-      display: inline-block;
-      font-weight: 700;
       box-shadow: 0 3px 8px rgba(39, 117, 80, 0.6);
-      transition: transform 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
-      animation: fadeUp 1.6s ease forwards;
-      cursor: pointer;
     }
 
-    .hero .hero-btn:hover,
-    .hero .hero-btn:focus {
-      color: var(--color-bg-light);
-      transform: scale(1.07);
-      box-shadow: 0 8px 24px rgba(39, 117, 80, 0.9);
-      outline: none;
-    }
-
-    .hero .link-button {
-      text-decoration: none;
-      padding: 13px 28px;
-      margin-bottom: 12px;
+    .link-button {
       background: linear-gradient(100deg, var(--color-accent) 60%, var(--color-primary) 100%);
       color: white;
-      display: inline-block;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 1.1rem;
       box-shadow: 0 3px 12px rgba(39, 117, 80, 0.75);
-      border: none;
-      margin-right: 8px;
-      transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-      animation: fadeUp 1.6s ease forwards;
-      cursor: pointer;
-    }
-
-    .hero .link-button:hover,
-    .hero .link-button:focus {
-      background: linear-gradient(100deg, #196639 60%, #2cc26e 100%);
-      transform: scale(1.06);
-      box-shadow: 0 7px 22px rgba(30, 110, 68, 1);
-      outline: none;
     }
 
     .section {
@@ -139,7 +100,6 @@
       opacity: 0;
       transform: translateY(50px);
       transition: all 0.8s ease;
-      color: var(--color-text-light);
     }
 
     .section-content.visible {
@@ -159,51 +119,17 @@
       color: var(--color-text-dark);
     }
 
-    .section-content .text ul {
-      padding-left: 20px;
-    }
-
     .section-content .image img {
       width: 100%;
       max-width: 400px;
-      display: block;
       margin: 0 auto;
-      transition: transform 0.4s ease;
+      display: block;
       border-radius: 6px;
-    }
-
-    .section-content .image img:hover {
-      transform: scale(1.05) rotate(-2deg);
-      filter: brightness(1.1);
-    }
-
-    .links {
-      display: flex;
-      gap: 20px;
-      margin: 20px 0 15px;
-      justify-content: center;
-    }
-
-    .link-button {
-      text-decoration: none;
-      padding: 13px 28px;
-      background: linear-gradient(100deg, var(--color-accent) 60%, var(--color-primary) 100%);
-      color: white;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 1.09rem;
-      box-shadow: 0 3px 12px rgba(39, 117, 80, 0.25);
-      border: none;
-      transition: all 0.19s;
-    }
-
-    .link-button:hover {
-      background: linear-gradient(100deg, #196639 60%, #2cc26e 100%);
-      transform: scale(1.07) translateY(-2px);
+      transition: transform 0.4s ease;
     }
 
     footer {
-      padding: 40px 20px;
+      padding: 30px 20px;
       text-align: center;
       background: var(--color-accent);
       color: var(--color-bg-dark);
@@ -223,27 +149,86 @@
       }
     }
 
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     @media (max-width: 900px) {
       .section-content {
         grid-template-columns: 1fr;
         text-align: center;
+        justify-items: center;
+        /* ✅ center content horizontally */
+      }
+
+      .section-content .text {
+        max-width: 500px;
+        /* prevent text from stretching edge-to-edge */
       }
 
       .section-content .image {
         order: -1;
+        /* image goes above text */
       }
+    }
+
+    /* Phones */
+    @media (max-width: 600px) {
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .hero p {
+        font-size: 1.05rem;
+      }
+
+      .hero .hero-btn,
+      .hero .link-button {
+        display: block;
+        width: 100%;
+        max-width: 320px;
+        margin: 10px auto;
+        font-size: 1rem;
+      }
+
+      .section-content .text h2 {
+        font-size: 1.6rem;
+      }
+
+      .section-content .text p,
+      .section-content .text ul {
+        font-size: 1rem;
+      }
+
+      footer {
+        font-size: 0.8rem;
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-buttons {
+        flex-direction: column;
+        /* stack buttons vertically */
+        gap: 0.75rem;
+        /* reduce spacing */
+      }
+
+      .hero-buttons a,
+      .hero-buttons button {
+        font-size: 0.9rem;
+        /* smaller text */
+        padding: 0.6rem 1rem;
+        /* reduce padding */
+        width: 100%;
+        /* full width for easy tapping */
+        max-width: 280px;
+        /* don’t stretch too wide */
+        margin: 0 auto;
+        /* center in column */
+      }
+    }
+
+    #chip {
+      padding: 5px;
+      border-radius: 5px;
+      background-color: rgb(34, 34, 34);
     }
   </style>
 </head>
@@ -251,7 +236,7 @@
 <body>
   <!-- Hero -->
   <section class="hero">
-    <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
+    <svg class="kolam-svg" viewBox="0 0 70 70">
       <circle cx="35" cy="35" r="32" stroke="#c00" stroke-width="2" />
       <ellipse cx="35" cy="35" rx="22" ry="22" stroke="#fff" stroke-width="2" />
       <path stroke="#c00" stroke-width="1.8" d="M12 35 Q35 10 58 35 Q35 60 12 35 Z" />
@@ -263,46 +248,47 @@
     <h1>KolamVerse</h1>
     <p>Create beautiful Kolams or trace and learn to draw Kolams</p>
     <a href="#howto" class="hero-btn">Get Started</a>
-    <!-- <div class="links"> -->
     <a href="/kolamtrace" class="link-button">KolamTrace</a>
     <a href="/kolamgen" class="link-button">KolamGen</a>
-    <!-- </div> -->
+    <a href="/kolamplayground" class="link-button">KolamPlayground</a>
   </section>
 
-  <!-- Kolam Rules Section -->
+  <!-- Kolam Rules -->
   <section class="section alt" id="rules">
     <div class="section-content">
       <div class="image">
-        <img src="./assets/kolam.png" alt="Kolam Rules Image" />
+        <img src="./assets/kolam.png" alt="Kolam Rules" />
       </div>
       <div class="text">
         <h2>What are the Kolam Rules?</h2>
         <ul>
-          <li>Begin with a grid of dots - symmetry is essential.</li>
-          <li>Draw continuous lines looping around the dots.</li>
-          <li>Kolam “seeds” and depth parameters produce endless patterns.</li>
-          <li>Every Kolam blends art, tradition, and mathematics!</li>
+          <li>Kolams are drawn on a grid of dots (called <em>pulli</em>) arranged in straight or staggered rows.</li>
+          <li>Lines must be continuous and unbroken, looping gracefully around the dots.</li>
+          <li>Dots are never crossed or erased — the beauty lies in weaving patterns <em>around</em> them.</li>
+          <li>Symmetry is a key principle: designs are usually mirrored horizontally, vertically, or radially.</li>
+          <li>Patterns can be simple daily kolams or intricate festival kolams with multiple layers.</li>
+          <li>Kolams traditionally symbolize harmony, infinity, and the cyclic nature of life.</li>
         </ul>
       </div>
     </div>
   </section>
 
-  <!-- How to Use Section -->
+
+  <!-- How to Use -->
   <section class="section" id="howto">
     <div class="section-content">
       <div class="text">
         <h2>How to Use KolamVerse</h2>
         <p>
-          <strong>KolamTrace:</strong> Upload a Kolam image to trace, convert, and watch an animated step-by-step
-          rendering.<br /><br />
-          <strong>KolamGen:</strong> Generate new Kolam patterns using Lindenmayer Systems (L-Systems)
+          <strong id="chip">KolamTrace:</strong> Upload a Kolam image to trace and animate.<br /><br />
+          <strong id="chip">KolamGen:</strong> Generate new Kolam patterns using L-Systems.<br /><br />
+          <strong id="chip">KolamPlayground:</strong> Modify Kolam parameters to make new designs<br /><br />
         </p>
       </div>
-
-      <!-- Buttons moved here instead of image -->
       <div class="links">
         <a href="/kolamtrace" class="link-button">KolamTrace</a>
         <a href="/kolamgen" class="link-button">KolamGen</a>
+        <a href="/kolamplayground" class="link-button">KolamPlayground</a>
       </div>
     </div>
   </section>
@@ -310,20 +296,13 @@
   <footer>KolamVerse · SIH 2025 · Made with ❤️ by Team LiveLifeLarge</footer>
 
   <script>
-    // reveal sections on scroll
     const sections = document.querySelectorAll('.section-content');
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    sections.forEach((section) => observer.observe(section));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    sections.forEach((s) => observer.observe(s));
   </script>
 </body>
 
