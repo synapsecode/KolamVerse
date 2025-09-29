@@ -28,7 +28,7 @@ The challenge is to develop computer programs (in any language, preferably Pytho
 3. Copy `.env.example` to `.env` and set `GEMINI_API_KEY` (optional; without it AI narration falls back to offline narration)
 4. Run server (development): `uvicorn main:app --reload --port 8000`
 5. Open:
-	- KolamDraw:  http://127.0.0.1:8000/kolamdraw
+	- KolamGen:  http://127.0.0.1:8000/kolamgen
 	- KolamTrace: http://127.0.0.1:8000/kolamtrace
 
 If `PyTurboJPEG` native library is missing the app transparently falls back to OpenCV JPEG encoding.
@@ -51,7 +51,7 @@ If `PyTurboJPEG` native library is missing the app transparently falls back to O
 - [ ] `.env` NOT committed (verify with `git status`)
 - [ ] New assets referenced correctly (cache-busting if needed)
 - [ ] Manual smoke test: upload image, view animation, description + narration
-- [ ] Seed generation & narration working on KolamDraw page
+- [ ] Seed generation & narration working on KolamGen page
 
 ---
 

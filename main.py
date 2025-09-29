@@ -11,7 +11,7 @@ from kolam_analyze.kolamdescribe import describe_kolam_characteristics, describe
 from kolam_analyze.seed_desc import seed_narration
 from kolam_frame_manager import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
-from kolamdraw_web import draw_kolam_web_bytes
+from kolamgen_web import draw_kolam_web_bytes
 from kolamspline import get_spline_csv, get_spline_json
 from utils import load_ai_prompt_template
 import io
@@ -157,11 +157,11 @@ def spline_points(
         "Content-Disposition": "attachment; filename=kolam_points.csv"
     })
 
-# ---------------- KolamDraw -------------------
+# ---------------- KolamGen -------------------
 
-@app.get("/kolamdraw", response_class=HTMLResponse)
-def app_kolamdraw():
-    index_path = os.path.join(STATIC_DIR, "kolamdraw.html")
+@app.get("/kolamgen", response_class=HTMLResponse)
+def app_kolamgen():
+    index_path = os.path.join(STATIC_DIR, "kolamgen.html")
     return FileResponse(index_path, headers={"Cache-Control":"no-store"})
 
 @app.get("/drawkolam")
@@ -265,3 +265,10 @@ async def describe_kolam_ai(
         except Exception: pass
 
     return JSONResponse(resp)
+
+# --------- Kolam Playground ----------------
+
+@app.get("/kolamplayground", response_class=HTMLResponse)
+def playground():
+    index_path = os.path.join(STATIC_DIR, "kolamplayground.html")
+    return FileResponse(index_path)

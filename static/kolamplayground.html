@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KolamPlayground | KolamVerse</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            background: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* prevents scrollbars */
+        }
+
+        .trace-bar {
+            flex-shrink: 0;
+            /* keep fixed height */
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: #22262c;
+            padding: 12px 48px;
+            border-bottom: 1.5px solid #232a33;
+            box-sizing: border-box;
+        }
+
+        .trace-bar .brand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trace-bar .brand h1 a {
+            text-decoration: none;
+            color: #e0e6ed;
+        }
+
+        .trace-bar .brand svg {
+            height: 42px;
+            width: 42px;
+        }
+
+        .trace-bar .section-title {
+            color: #78f5c6;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            flex: 1;
+            /* take remaining height */
+            display: flex;
+            overflow: hidden;
+            /* no scrollbars from container */
+        }
+
+        .left-pane {
+            width: 35%;
+            background: #161b22;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4);
+            border-right: 1px solid #30363d;
+            overflow-y: auto;
+            /* scroll only inside left pane if needed */
+        }
+
+        .right-pane {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0d1117;
+            overflow: hidden;
+        }
+
+        .left-pane h2 {
+            margin-bottom: 20px;
+            color: #f0f6fc;
+            text-align: center;
+        }
+
+        label {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: #c9d1d9;
+            display: block;
+        }
+
+        input[type="range"],
+        select {
+            width: 100%;
+            margin-top: 6px;
+            background: #0d1117;
+            color: #f0f6fc;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+        }
+
+        select option {
+            background: #161b22;
+            color: #f3f4f6;
+        }
+
+        button {
+            margin-top: 24px;
+            padding: 12px;
+            background: #238636;
+            color: #f0f6fc;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        button:disabled {
+            background: #484f58;
+            cursor: not-allowed;
+        }
+
+        canvas {
+
+            border-radius: 12px;
+            border: 2px solid #30363d;
+            background: #000000;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-pane,
+            .right-pane {
+                width: 100% !important;
+                border-right: none;
+                border-bottom: 1px solid #30363d;
+            }
+
+            .left-pane {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Nav -->
+    <div class="trace-bar">
+        <div class="brand">
+            <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="32" stroke="#c00" stroke-width="2" />
+                <ellipse cx="35" cy="35" rx="22" ry="22" stroke="#ffffff" stroke-width="2" />
+                <path stroke="#c00" stroke-width="1.8" d="M12 35 Q35 10 58 35 Q35 60 12 35 Z" />
+                <circle cx="35" cy="17" r="2" fill="#ffffff" />
+                <circle cx="35" cy="53" r="2" fill="#ffffff" />
+                <circle cx="17" cy="35" r="2" fill="#ffffff" />
+                <circle cx="53" cy="35" r="2" fill="#ffffff" />
+            </svg>
+            <h1><a href="/">KolamVerse</a></h1>
+        </div>
+        <span class="section-title">Playground</span>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="container">
+        <!-- Left Controls -->
+        <div class="left-pane">
+            <h2>Kolam Parameters</h2>
+
+            <label>Tile Size
+                <input type="range" id="tileSize" min="20" max="80" value="45">
+            </label>
+            <label>Grid Size
+                <input type="range" id="gridSize" min="3" max="30" value="10">
+            </label>
+            <label>Rotation
+                <input type="range" id="rotation" min="0" max="6.283" step="0.1" value="0.785">
+            </label>
+            <label>Dot Density
+                <input type="range" id="density" min="0.2" max="1" step="0.05" value="0.6">
+            </label>
+            <label>Symmetry
+                <select id="symmetryMode">
+                    <option value="1">None</option>
+                    <option value="2">2-way</option>
+                    <option value="4" selected>4-way</option>
+                    <option value="6">6-way</option>
+                    <option value="8">8-way</option>
+                </select>
+            </label>
+
+            <button id="refresh">Redraw</button>
+        </div>
+
+        <!-- Right Canvas -->
+        <div class="right-pane" id="canvas-holder"></div>
+    </div>
+
+    <script src="/assets/kolamplayground.js"></script>
+
+</body>
+
+</html>
