@@ -272,3 +272,10 @@ async def describe_kolam_ai(
 def playground():
     index_path = os.path.join(STATIC_DIR, "kolamplayground.html")
     return FileResponse(index_path)
+
+# ---------- Practice Kolam Section -------------------
+
+@app.get("/practice", response_class=HTMLResponse)
+def playground(data: str = None):
+    index_path = os.path.join(STATIC_DIR, "practicekolam.html")
+    return FileResponse(index_path)
