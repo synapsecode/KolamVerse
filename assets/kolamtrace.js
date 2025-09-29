@@ -17,10 +17,11 @@ class KolamAnimator {
 
         // this.curveImg = document.getElementById(cfg.curveImgId);
         // this.curveSamples = document.getElementById(cfg.curveSamplesId);
-        this.curveSmooth = document.getElementById(cfg.curveSmoothId);
+        // this.curveSmooth = document.getElementById(cfg.curveSmoothId);
         this.curvePanel = document.getElementById(cfg.curvePanelId);
         this.downloadPoints = document.getElementById(cfg.downloadPointsId);
         this.downloadJSON = document.getElementById(cfg.downloadJSONId);
+        this.practiceBtn = document.getElementById(cfg.praciceBtnId);
 
         this.frames = [];
         this.currentFrame = 0;
@@ -41,6 +42,13 @@ class KolamAnimator {
         this.forwardBtn.addEventListener('click', () => this._updateFrame(this.currentFrame + this.FRAMESKIP));
         this.slider.addEventListener('input', () => this._updateFrame(parseInt(this.slider.value)));
         this.showCurveBtn.addEventListener("click", () => this._showCurve());
+        this.practiceBtn.addEventListener('click', () => this._openPracticePage());
+    }
+
+
+    _openPracticePage() {
+        let imgsrc = this.previewImg.src;
+        window.open(`/practice?data=${imgsrc}`, '_blank');
     }
 
     _previewSelected() {
@@ -51,6 +59,7 @@ class KolamAnimator {
             this.placeholder.classList.add('hidden');
             this.animateBtn.disabled = false;
             this.showCurveBtn.disabled = true;
+            this.practiceBtn.disabled = true;
             // this.curveImg.style.display = "none";
         }
     }
@@ -76,6 +85,7 @@ class KolamAnimator {
             this._startLiveMJPEG(this.csvFile);
             this._pollSnapshots();
             this.showCurveBtn.disabled = false; // ✅ enable curve button after upload
+            this.practiceBtn.disabled = false;
         } catch (err) {
             console.error('Upload failed:', err);
         }
@@ -156,10 +166,7 @@ class KolamAnimator {
             return;
         }
 
-        const smooth = Math.max(
-            0,
-            Math.min(1000, parseFloat(this.curveSmooth?.value) || 0)
-        );
+        const smooth = 0; //DEFAULT
 
         this.curvePanel.style.display = "block";
         this.downloadPoints.href = `/spline_points?csv_file=${encodeURIComponent(this.csvFile)}&smooth=${smooth}`;
@@ -254,11 +261,12 @@ new KolamAnimator({
     showCurveBtnId: "show-curve",
     // curveImgId: "curvePreview",
     // curveSamplesId: "curve-samples",
-    curveSmoothId: "curve-smooth",
+    // curveSmoothId: "curve-smooth",
     curvePanelId: "curve-panel",
     downloadPointsId: "downloadPoints",
     downloadJSONId: "downloadJSON",
     animPlaceholderId: 'anim-placeholder',
     animateBtnId: 'animate-btn',
-    shimmerLoaderId: 'shimmer-loader'
+    shimmerLoaderId: 'shimmer-loader',
+    praciceBtnId: 'practicebtn'
 });
