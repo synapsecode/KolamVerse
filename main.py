@@ -265,3 +265,10 @@ async def describe_kolam_ai(
         except Exception: pass
 
     return JSONResponse(resp)
+
+# --------- Kolam Playground ----------------
+
+@app.get("/kolamplayground", response_class=HTMLResponse)
+def playground():
+    index_path = os.path.join(STATIC_DIR, "kolamplayground.html")
+    return FileResponse(index_path)
