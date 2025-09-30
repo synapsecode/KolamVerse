@@ -1,8 +1,3 @@
-"""
-Web-compatible version of kolamdraw.py that generates PIL images instead of using turtle graphics.
-This maintains the exact same rendering logic as the turtle version but outputs to PNG.
-"""
-
 import io
 from math import cos, sin, radians, sqrt, pi
 from PIL import Image, ImageDraw
@@ -198,11 +193,6 @@ class WebTurtle:
 
 
 def draw_kolam_web(seed="FBFBFBFB", depth=1, step=20, angle=0, img_size=(800, 800), padding=50):
-    """
-    Web version of draw_kolam that generates L-system kolam patterns as PIL Images.
-    This exactly replicates the turtle graphics behavior from kolamdraw.py
-    Color mode is controlled by 'C' commands within the seed/L-system string.
-    """
     # Generate L-system state
     if isinstance(seed, str) and all(c in "FABLRC" for c in seed):
         state = generate_lsystem_state(seed, depth)
@@ -219,7 +209,6 @@ def draw_kolam_web(seed="FBFBFBFB", depth=1, step=20, angle=0, img_size=(800, 80
     dot_positions = []
     is_colorful = False  # Start in white mode, only 'C' command can enable colors
     
-    # Draw the pattern (exact same logic as kolamdraw.py)
     for ch in state:
         if ch == 'F':
             t.color('green' if is_colorful else 'white')
@@ -398,6 +387,9 @@ def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_si
         elif ch == 'A':
             color = 'blue' if is_colorful else 'white'
             
+            # Store position for dot (same as main draw function)
+            dot_positions.append(t.position())
+            
             # Store position for animation
             start_pos = t.position()
             start_heading = t.heading
@@ -428,6 +420,9 @@ def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_si
             
         elif ch == 'B':
             color = 'red' if is_colorful else 'white'
+            
+            # Store position for dot (same as main draw function)
+            dot_positions.append(t.position())
             
             I = step / sqrt(2)
             

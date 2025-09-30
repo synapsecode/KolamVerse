@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KolamGen | KolamVerse</title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100vh;
+      background: #0d1117;
+      color: #c9d1d9;
+    }
+
+    .trace-bar {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: #22262c;
+      padding: 12px 48px;
+      border-bottom: 1.5px solid #232a33;
+    }
+
+    .trace-bar .brand {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trace-bar .brand h1 a {
+      text-decoration: none;
+      color: #e0e6ed;
+    }
+
+    .trace-bar .brand svg {
+      height: 42px;
+      width: 42px;
+    }
+
+    .trace-bar .section-title {
+      color: #78f5c6;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      display: flex;
+      min-height: calc(100vh - 94px);
+    }
+
+    .left-pane {
+      width: 35%;
+      background: #161b22;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: stretch;
+      box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4);
+      border-right: 1px solid #30363d;
+    }
+
+    .left-pane h2 {
+      margin-bottom: 20px;
+      color: #f0f6fc;
+      text-align: center;
+    }
+
+    textarea {
+      resize: none;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      min-height: 120px;
+      background: #0d1117;
+      color: #c9d1d9;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+    }
+
+    textarea::placeholder {
+      color: #8b949e;
+    }
+
+    button {
+      padding: 12px;
+      background: #238636;
+      color: #f0f6fc;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #2ea043;
+    }
+
+    button:disabled {
+      background: #484f58;
+      cursor: not-allowed;
+    }
+
+    .right-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #0d1117;
+      padding: 20px;
+    }
+
+    .canvas-container {
+      position: relative;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #kolamCanvas {
+      border: 2px solid #30363d;
+      border-radius: 12px;
+      background: #000000;
+      max-width: 90%;
+      max-height: 70vh;
+    }
+
+    .animation-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 15px;
+    }
+
+    .control-button {
+      padding: 8px 16px;
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .control-button:hover {
+      background: #30363d;
+    }
+
+    .control-button:disabled {
+      background: #161b22;
+      color: #6e7681;
+      cursor: not-allowed;
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+
+    .speed-slider {
+      width: 100px;
+      height: 4px;
+      background: #30363d;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .progress-info {
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+
+    .loader {
+      display: none;
+      color: #8b949e;
+      font-style: italic;
+      margin-top: 10px;
+    }
+
+    hr {
+      width: 100%;
+      border-top: 1px solid #30363d;
+      margin: 20px 0;
+      border-bottom: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    /* Medium screens and below */
+    @media (max-width: 1000px) {
+      .container {
+        flex-direction: column;
+        min-height: unset;
+      }
+
+      .left-pane,
+      .right-pane {
+        width: 100% !important;
+        max-width: none !important;
+        border-right: none;
+        border-bottom: 1px solid #30363d;
+      }
+
+      .left-pane {
+        padding: 20px 15px;
+      }
+
+      .right-pane {
+        padding: 15px;
+      }
+
+      #kolamCanvas {
+        max-width: 95%;
+        max-height: 60vh;
+      }
+    }
+
+    #narrationPanel {
+      margin-top: 28px;
+      display: none;
+    }
+
+    #narrationPanel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: #58a6ff;
+    }
+
+    #seedNarration {
+      padding: 14px 16px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .loading {
+      background: #1c2128;
+      border-color: #30363d !important;
+      color: #8b949e;
+    }
+
+    .divider {
+      width: 100%;
+      border-top: 1px solid #30363d;
+      margin: 20px 0;
+      border-bottom: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .placeholder {
+      color: #8b949e;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* Small screens */
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9rem;
+      }
+
+      textarea {
+        font-size: 0.95rem;
+      }
+
+      button {
+        font-size: 0.95rem;
+        padding: 10px;
+      }
+
+      .trace-bar {
+        padding: 8px 20px;
+      }
+
+      .trace-bar .brand svg {
+        height: 32px;
+        width: 32px;
+      }
+
+      .trace-bar .section-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="trace-bar">
+    <div class="brand">
+      <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
+        <circle cx="35" cy="35" r="32" stroke="#c00" stroke-width="2" />
+        <ellipse cx="35" cy="35" rx="22" ry="22" stroke="#ffffff" stroke-width="2" />
+        <path stroke="#c00" stroke-width="1.8" d="M12 35 Q35 10 58 35 Q35 60 12 35 Z" />
+        <circle cx="35" cy="17" r="2" fill="#ffffff" />
+        <circle cx="35" cy="53" r="2" fill="#ffffff" />
+        <circle cx="17" cy="35" r="2" fill="#ffffff" />
+        <circle cx="53" cy="35" r="2" fill="#ffffff" />
+      </svg>
+      <h1><a href="/">KolamVerse</a></h1>
+    </div>
+    <span class="section-title">KolamGen</span>
+  </div>
+  <div class="container">
+    <div class="left-pane">
+      <h2>Generate Kolams using Lindenmayer Systems</h2><br><br>
+      <textarea id="prompt" placeholder="Enter L-system seed (e.g. FBFBFBFB)..."></textarea>
+
+      <button onclick="generateKolam()">Generate</button>
+      <hr class="divider" />
+      <textarea id="prompt-input"
+        placeholder="Describe the pattern you want (e.g. A flower with 6 petals, weaving symmetry, more rounded)"></textarea>
+      <button id="prompt-button" onclick="generateFromPrompt()">Generate Seed From Prompt</button>
+      <div id="loader" class="loader">Generating seed...</div>
+      <div id="narrationPanel">
+        <h3>Pattern Narration</h3>
+        <div id="seedNarration"></div>
+      </div>
+    </div>
+    <div class="right-pane">
+      <div class="canvas-container">
+        <canvas id="kolamCanvas" width="800" height="600">Generated Kolam will appear here</canvas>
+      </div>
+      <div class="animation-controls" id="animationControls">
+        <button class="control-button" id="playPauseBtn" onclick="togglePlayPause()">▶️ Play</button>
+        <button class="control-button" id="restartBtn" onclick="restartAnimation()">🔄 Restart</button>
+        <button class="control-button" id="stepBtn" onclick="stepForward()">⏭️ Step</button>
+        <div class="speed-control">
+          <span>Speed:</span>
+          <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="5" onchange="changeSpeed()">
+        </div>
+        <div class="progress-info" id="progressInfo">Step 0 / 0</div>
+      </div>
+      <div id="placeholderText" class="placeholder">Enter a seed or prompt to begin.</div>
+    </div>
+  </div>
+
+  <script>
+    // Animation state
+    let drawingSteps = [];
+    let currentStep = 0;
+    let animationId = null;
+    let isPlaying = false;
+    let animationSpeed = 50; // milliseconds between steps
+    
+    // Store the original generateKolam function if it exists
+    let originalGenerateKolam = null;
+    
+    // Canvas animation functions
+    function clearCanvas() {
+      const canvas = document.getElementById('kolamCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    function drawStep(step) {
+      const canvas = document.getElementById('kolamCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (step.type === 'line') {
+        ctx.strokeStyle = step.color;
+        ctx.lineWidth = step.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(step.start.x, step.start.y);
+        ctx.lineTo(step.end.x, step.end.y);
+        ctx.stroke();
+      } else if (step.type === 'dot') {
+        ctx.fillStyle = step.color;
+        ctx.beginPath();
+        ctx.arc(step.x, step.y, step.radius, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+    
+    function startAnimation() {
+      if (isPlaying || currentStep >= drawingSteps.length) return;
+      
+      isPlaying = true;
+      document.getElementById('playPauseBtn').textContent = '⏸️ Pause';
+      
+      function animate() {
+        if (!isPlaying || currentStep >= drawingSteps.length) {
+          isPlaying = false;
+          document.getElementById('playPauseBtn').textContent = '▶️ Play';
+          return;
+        }
+        
+        drawStep(drawingSteps[currentStep]);
+        currentStep++;
+        updateProgressInfo();
+        
+        animationId = setTimeout(animate, animationSpeed);
+      }
+      
+      animate();
+    }
+    
+    function stopAnimation() {
+      isPlaying = false;
+      if (animationId) {
+        clearTimeout(animationId);
+        animationId = null;
+      }
+      document.getElementById('playPauseBtn').textContent = '▶️ Play';
+    }
+    
+    function togglePlayPause() {
+      if (isPlaying) {
+        stopAnimation();
+      } else {
+        startAnimation();
+      }
+    }
+    
+    function restartAnimation() {
+      stopAnimation();
+      currentStep = 0;
+      clearCanvas();
+      updateProgressInfo();
+    }
+    
+    function stepForward() {
+      if (currentStep < drawingSteps.length) {
+        drawStep(drawingSteps[currentStep]);
+        currentStep++;
+        updateProgressInfo();
+      }
+    }
+    
+    function changeSpeed() {
+      const slider = document.getElementById('speedSlider');
+      // Convert slider value (1-10) to animation delay (100ms - 10ms)
+      animationSpeed = 110 - (slider.value * 10);
+    }
+    
+    function updateProgressInfo() {
+      const progressInfo = document.getElementById('progressInfo');
+      progressInfo.textContent = `Step ${currentStep} / ${drawingSteps.length}`;
+    }
+
+    // Initialize canvas with black background on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      clearCanvas();
+    });
+  </script>
+
+  <!-- <script src="/assets/kolamgen.js"></script> -->
+  
+  <script>
+    // Override the generateKolam function AFTER loading the external script
+    // This ensures we have access to getSeedNarration and other functions
+    async function generateKolam() {
+      const seed = document.getElementById("prompt").value.trim();
+      if (!seed) {
+        alert("Please enter a seed first.");
+        return;
+      }
+
+      // Clear previous animation and hide placeholder immediately
+      stopAnimation();
+      clearCanvas();
+      document.getElementById('placeholderText').style.display = 'none';
+      
+      try {
+        // Get drawing steps from backend for animation
+        const response = await fetch(`/drawkolam_steps?seed=${encodeURIComponent(seed)}&depth=2`);
+        if (!response.ok) {
+          throw new Error('Failed to generate kolam steps');
+        }
+        
+        const data = await response.json();
+        drawingSteps = data.steps;
+        currentStep = 0;
+        
+        console.log('Drawing steps loaded:', drawingSteps.length);
+        
+        // Update progress and start animation
+        updateProgressInfo();
+        startAnimation();
+        
+        // Also get narration if the function exists
+        if (typeof getSeedNarration === 'function') {
+          await getSeedNarration(seed);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate kolam animation');
+        // Show placeholder again if there's an error
+        document.getElementById('placeholderText').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+
+</html>

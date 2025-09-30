@@ -11,8 +11,12 @@ from kolam_analyze.kolamdescribe import describe_kolam_characteristics, describe
 from kolam_analyze.seed_desc import seed_narration
 from kolam_frame_manager import KolamFrameManager
 from kolamanimator import animate_eulerian_stream, compute_eulerian_path, load_all_points, normalize_strokes
-from kolamdraw_web import draw_kolam_web_bytes
+from kolamgen_web import draw_kolam_web_bytes
+from kolamspline import get_spline_csv, get_spline_json
 from utils import load_ai_prompt_template
+import io
+import cv2
+import numpy as np
 from dotenv import load_dotenv
 
 # Load Environment Variables
@@ -25,7 +29,6 @@ STATIC_DIR = "static"
 os.makedirs(STATIC_DIR, exist_ok=True)
 
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -41,7 +44,10 @@ def app_kolamtrace():
     return FileResponse(index_path, headers={"Cache-Control":"no-store"})
 
 @app.post("/upload_kolam")
-async def upload_kolam(file: UploadFile = File(...)):
+async def upload_kolam(
+    file: UploadFile = File(...),
+    maxsize: int = Query(0, ge=0, description="Downscale longest side before tracing (0=disable)")
+):
     # Check content type
     if not file.content_type.startswith("image/"):
         return JSONResponse({"error": "Only image files are allowed"}, status_code=400)
@@ -53,6 +59,20 @@ async def upload_kolam(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    # Optional downscale for speed on large images
+    if maxsize and maxsize > 0:
+        try:
+            img = cv2.imread(file_path, cv2.IMREAD_COLOR)
+            if img is not None:
+                h, w = img.shape[:2]
+                m = max(h, w)
+                if m > maxsize:
+                    scale = maxsize / float(m)
+                    resized = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+                    cv2.imwrite(file_path, resized)
+        except Exception:
+            pass
+
     # Convert Image to CSV
     csv_filename = f"{os.path.splitext(file.filename)[0]}.csv"
     csv_path = os.path.join(STATIC_DIR, csv_filename)
@@ -60,6 +80,8 @@ async def upload_kolam(file: UploadFile = File(...)):
 
     # Delete the Image
     os.remove(file_path)
+
+    # TODO: REMOVE CSV
 
     return {"csv_file": csv_filename}
 
@@ -71,14 +93,11 @@ async def animate_kolam(csv_file: str = Query(..., description="CSV filename gen
     if not os.path.exists(csv_path):
         return JSONResponse({"error": "CSV file not found"}, status_code=404)
     
-    kolam_frame_manager.clear()
+    await kolam_frame_manager.clear()
 
     strokes = load_all_points(csv_path)
     strokes = normalize_strokes(strokes)
     path = compute_eulerian_path(strokes, tol=1e-1)
-
-    # Delete the CSV
-    os.remove(csv_path)
 
     return StreamingResponse(
         animate_eulerian_stream(path, kolam_frame_manager, step_delay=0.00005),
@@ -97,11 +116,52 @@ async def kolam_snapshots():
     frames_b64 = [base64.b64encode(f).decode("utf-8") for f in snapshots]
     return JSONResponse({"status":"ready","frames": frames_b64}, headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
 
-# ---------------- KolamDraw -------------------
+# ---------------- KolamSpline -------------------
 
-@app.get("/kolamdraw", response_class=HTMLResponse)
-def app_kolamdraw():
-    index_path = os.path.join(STATIC_DIR, "kolamdraw.html")
+
+@app.get("/kolamspline", response_class=HTMLResponse)
+async def index(data: str=None):
+    index_path = os.path.join(STATIC_DIR, "spline.html")
+    return FileResponse(index_path)
+
+@app.get("/spline_json")
+def spline_json(
+    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
+    smooth: float = Query(0.0, ge=0.0)
+):
+    """Return B-spline parameters t (knots), c (coefficients), k (degree)."""
+    csv_path = os.path.join(STATIC_DIR, csv_file)
+    if not os.path.exists(csv_path):
+        return JSONResponse({"error": "CSV file not found"}, status_code=404)
+
+    res, err = get_spline_json(csv_path, smooth)
+    if(err != None):
+        return JSONResponse({"error": str(err)}, status_code=400)
+    
+    return JSONResponse(res)
+
+@app.get("/spline_points")
+def spline_points(
+    csv_file: str = Query(..., description="CSV filename from /upload_kolam"),
+    samples: int = Query(1000, ge=10, le=50000),
+    smooth: float = Query(0.0, ge=0.0)
+):
+    csv_path = os.path.join(STATIC_DIR, csv_file)
+    if not os.path.exists(csv_path):
+        return JSONResponse({"error": "CSV file not found"}, status_code=404)
+    data, err = get_spline_csv(csv_path, samples, smooth)
+    if(err != None):
+        return JSONResponse({"error": str(err)}, status_code=400)
+
+    return Response(content=data, media_type="text/csv", headers={
+        "Content-Disposition": "attachment; filename=kolam_points.csv"
+    })
+
+# ---------------- KolamGen -------------------
+
+@app.get("/kolamgen", response_class=HTMLResponse)
+def app_kolamgen():
+    index_path = os.path.join(STATIC_DIR, "kolamgen.html")
     return FileResponse(index_path, headers={"Cache-Control":"no-store"})
 
 @app.get("/drawkolam")
@@ -113,7 +173,7 @@ def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
 @app.get("/drawkolam_steps")
 def drawkolam_steps(seed: str = "FBFBFBFB", depth: int = 1):
     # Generate step-by-step drawing instructions for animation
-    from kolamdraw_web import generate_drawing_steps
+    from kolamgen_web import generate_drawing_steps
     steps = generate_drawing_steps(seed=seed, depth=depth)
     return JSONResponse({"steps": steps})
 
@@ -225,3 +285,17 @@ async def describe_kolam_ai(
         except Exception: pass
 
     return JSONResponse(resp)
+
+# --------- Kolam Playground ----------------
+
+@app.get("/kolamplayground", response_class=HTMLResponse)
+def playground():
+    index_path = os.path.join(STATIC_DIR, "kolamplayground.html")
+    return FileResponse(index_path)
+
+# ---------- Practice Kolam Section -------------------
+
+@app.get("/practice", response_class=HTMLResponse)
+def playground(data: str = None):
+    index_path = os.path.join(STATIC_DIR, "practicekolam.html")
+    return FileResponse(index_path)

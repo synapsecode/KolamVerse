@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KolamVerse | Unified Practice Tool</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <style>
+        /* BASE DESIGN LANGUAGE (Unified) */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            background: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .trace-bar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: #22262c;
+            padding: 12px 48px;
+            border-bottom: 1.5px solid #232a33;
+            box-sizing: border-box;
+        }
+
+        .trace-bar .brand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trace-bar .brand h1 a {
+            text-decoration: none;
+            color: #e0e6ed;
+            font-size: 1.5rem;
+        }
+
+        .trace-bar .brand svg {
+            height: 36px;
+            width: 36px;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* --- MODE TABS --- */
+        .mode-tabs {
+            flex-shrink: 0;
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #30363d;
+        }
+
+        .mode-tab {
+            padding: 10px 20px;
+            background: #161b22;
+            color: #c9d1d9;
+            cursor: pointer;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border: 1px solid #30363d;
+            border-bottom: none;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .mode-tab.active {
+            background: #388bfd;
+            color: #f0f6fc;
+            border-color: #388bfd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: #1f252d;
+        }
+
+
+        /* --- MAIN LAYOUT --- */
+        .main-layout {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .left-pane {
+            width: 350px;
+            /* Fixed width for controls pane */
+            background: #161b22;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            overflow-y: auto;
+            align-items: stretch;
+            flex-shrink: 0;
+        }
+
+        .right-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .content-panel {
+            flex: 1;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .content-panel h3 {
+            margin: 0 0 15px 0;
+            color: #f0f6fc;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 8px;
+        }
+
+        .image-container,
+        .canvas-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            border-radius: 6px;
+            overflow: hidden;
+            min-height: 250px;
+        }
+
+        #mainCanvas {
+            border: 2px solid #30363d;
+            border-radius: 6px;
+            background: #000000;
+            cursor: crosshair;
+        }
+
+        /* --- CONTROLS STYLING (LEFT PANE) --- */
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #30363d44;
+        }
+
+        .control-group:last-of-type {
+            border-bottom: none;
+        }
+
+        label {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #c9d1d9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        #colorPicker {
+            width: 40px;
+            height: 25px;
+            padding: 0;
+            border: 1px solid #30363d;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .tool-bar,
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Tool & Action Button Styling */
+        .tool-btn,
+        .btn {
+            padding: 10px 15px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s, border-color 0.2s;
+            color: #c9d1d9;
+            background: #21262d;
+            flex: 1;
+            box-sizing: border-box;
+        }
+
+        .tool-btn.active {
+            background: #388bfd;
+            border-color: #388bfd;
+            color: #f0f6fc;
+        }
+
+        .tool-btn:hover:not(.active) {
+            background: #2e353f;
+        }
+
+        .btn-secondary {
+            background: #6e7681;
+            border-color: #6e7681;
+            color: #f0f6fc;
+        }
+
+        .btn-secondary:hover {
+            background: #848d97;
+            border-color: #848d97;
+        }
+
+        .btn-primary {
+            background: #388bfd;
+            border-color: #388bfd;
+            color: #f0f6fc;
+        }
+
+        .btn-primary:hover {
+            background: #58a6ff;
+            border-color: #58a6ff;
+        }
+
+        .btn-success {
+            background: #238636;
+            border-color: #238636;
+            color: #f0f6fc;
+        }
+
+        .btn-success:hover {
+            background: #2ea043;
+            border-color: #2ea043;
+        }
+
+        /* Grid Templates */
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .template-item {
+            padding: 8px 4px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            transition: all 0.2s;
+        }
+
+        .template-item strong {
+            display: block;
+            font-size: 1rem;
+            color: #f0f6fc;
+        }
+
+        .template-item:hover {
+            border-color: #58a6ff;
+            background: #1f252d;
+        }
+
+        .template-item.active {
+            border-color: #58a6ff;
+            background: #1f252d;
+            color: #58a6ff;
+            box-shadow: 0 0 0 3px #58a6ff33;
+        }
+
+        .upload-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .file-input-button {
+            flex: 1;
+            text-align: center;
+            padding: 10px 15px;
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .file-input-button:hover {
+            background: #2e353f;
+        }
+
+        /* --- VISIBILITY CLASSES --- */
+        .hidden {
+            display: none !important;
+        }
+
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .trace-bar {
+                padding: 10px 20px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .main-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .left-pane {
+                width: 100%;
+                order: 2;
+                /* Controls below canvas on small screens */
+                padding: 15px;
+                box-shadow: none;
+                border: none;
+                border-top: 1px solid #30363d;
+            }
+
+            .right-pane {
+                order: 1;
+                /* Canvas area on top */
+                min-height: 50vh;
+            }
+
+            .content-panel {
+                min-height: 40vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="trace-bar">
+        <div class="brand">
+            <svg class="kolam-svg" fill="none" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="32" stroke="#c00" stroke-width="2" />
+                <ellipse cx="35" cy="35" rx="22" ry="22" stroke="#ffffff" stroke-width="2" />
+                <path stroke="#c00" stroke-width="1.8" d="M12 35 Q35 10 58 35 Q35 60 12 35 Z" />
+                <circle cx="35" cy="17" r="2" fill="#ffffff" />
+                <circle cx="35" cy="53" r="2" fill="#ffffff" />
+                <circle cx="17" cy="35" r="2" fill="#ffffff" />
+                <circle cx="53" cy="35" r="2" fill="#ffffff" />
+            </svg>
+            <h1><a href="/">KolamVerse</a></h1>
+        </div>
+        <span style="color: #78f5c6; margin-top: 10px;">Practice</span>
+    </div>
+
+    <div class="container">
+        <div class="mode-tabs">
+            <div class="mode-tab active" data-mode="trace">🖼️ Image Trace</div>
+            <div class="mode-tab" data-mode="grid">✏️ Grid Draw</div>
+        </div>
+
+        <div class="main-layout">
+            <div class="left-pane">
+                <div class="control-group">
+                    <label>Active Tool</label>
+                    <div class="tool-bar">
+                        <button class="tool-btn active" data-tool="draw">✏️ Draw</button>
+                        <button class="tool-btn" data-tool="erase">🧽 Erase</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="sizeSlider">Stroke Size: <span id="sizeDisplay">3px</span></label>
+                    <input type="range" id="sizeSlider" min="1" max="10" value="3">
+
+                    <label for="colorPicker">Stroke Color: </label>
+                    <input type="color" id="colorPicker" value="#FFFFFF">
+                </div>
+
+                <div id="grid-controls" class="hidden">
+                    <div class="control-group">
+                        <label>Select Dot Grid Size (Rows x Columns)</label>
+                        <div class="template-grid">
+                            <div class="template-item" data-grid="3x3"><strong>3x3</strong><br>9 Dots</div>
+                            <div class="template-item" data-grid="5x5"><strong>5x5</strong><br>25 Dots</div>
+                            <div class="template-item active" data-grid="7x7"><strong>7x7</strong><br>49 Dots</div>
+                            <div class="template-item" data-grid="9x9"><strong>9x9</strong><br>81 Dots</div>
+                            <div class="template-item" data-grid="11x11"><strong>11x11</strong><br>121 Dots</div>
+                            <div class="template-item" data-grid="15x15"><strong>15x15</strong><br>225 Dots</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="trace-controls">
+                    <div class="control-group">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                        <label for="imageInput" class="file-input-button">📁 Upload Kolam Image</label>
+                    </div>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+                    <button class="btn btn-primary" id="resetDotsBtn">Reset Dots</button>
+                    <button class="btn btn-success" id="downloadBtn">Download</button>
+                </div>
+            </div>
+
+            <div class="right-pane">
+                <div id="trace-panels" style="display: flex; flex: 1; gap: 20px; overflow: hidden;">
+                    <div class="content-panel">
+                        <h3>Original Image (Reference)</h3>
+                        <div class="image-container" id="originalContainer">
+                            <span style="color: #6e7681; font-style: italic;">Upload your kolam image above</span>
+                        </div>
+                    </div>
+                    <div class="content-panel">
+                        <h3>Tracing Practice Area</h3>
+                        <div class="canvas-container">
+                            <canvas id="mainCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="grid-panel" class="hidden" style="display: flex; flex: 1; overflow: hidden;">
+                    <div class="content-panel"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <h3>Dot Grid Drawing Area</h3>
+                        <div class="canvas-container">
+                            <canvas id="mainCanvasGrid"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class UnifiedKolamApp {
+            constructor() {
+                this.canvasGrid = document.getElementById('mainCanvasGrid');
+                this.canvasTrace = document.getElementById('mainCanvas');
+
+                this.ctxGrid = this.canvasGrid.getContext('2d');
+                this.ctxTrace = this.canvasTrace.getContext('2d');
+
+                this.currentMode = 'trace';
+                this.activeCanvas = this.canvasTrace;
+                this.activeCtx = this.ctxTrace;
+
+                this.isDrawing = false;
+                this.tool = 'draw';
+                this.size = 3;
+                this.color = '#FFFFFF';
+
+                // Grid Draw State
+                this.gridDots = [];
+                this.selectedGrid = '7x7';
+
+                // Image Trace State
+                this.traceDots = [];
+                this.dotsImageData = null;
+                this.originalImage = null;
+
+                // Call init wrapped in a timeout to ensure initial layout is complete
+                // This is a common pattern to ensure the browser has calculated all initial dimensions.
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => this.init(), 0);
+                });
+            }
+
+            init() {
+                this.setupCanvas(this.canvasGrid, this.ctxGrid);
+                this.setupCanvas(this.canvasTrace, this.ctxTrace);
+                this.setupEvents();
+
+                // Switch mode and initialize the active mode's content
+                this.switchMode(this.currentMode);
+
+                const params = new URLSearchParams(window.location.search);
+                const imageUrl = params.get('data');
+
+                if (imageUrl) {
+                    this.loadImageFromUrl(imageUrl);
+                }
+            }
+
+            // Corrected: Uses container's *current* dimensions to size the canvas
+            setupCanvas(canvas, ctx) {
+                const container = canvas.closest('.canvas-container');
+                if (!container) return;
+
+                // Force layout calculation if necessary (though DOMContentLoaded/setTimeout should help)
+                container.offsetWidth;
+
+                const size = Math.min(container.clientWidth, container.clientHeight) * 0.9;
+                const finalSize = Math.min(size, 550);
+
+                canvas.width = finalSize;
+                canvas.height = finalSize;
+
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            setupEvents() {
+                document.querySelectorAll('.mode-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.switchMode(e.target.dataset.mode));
+                });
+
+                document.querySelectorAll('[data-tool="draw"], [data-tool="erase"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.selectTool(e.target.dataset.tool));
+                });
+
+                document.getElementById('sizeSlider').addEventListener('input', (e) => {
+                    this.size = parseInt(e.target.value);
+                    document.getElementById('sizeDisplay').textContent = this.size + 'px';
+                });
+
+                document.getElementById('colorPicker').addEventListener('change', (e) => {
+                    this.color = e.target.value;
+                });
+
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearDrawing());
+                document.getElementById('downloadBtn').addEventListener('click', () => this.download());
+                document.getElementById('resetDotsBtn').addEventListener('click', () => this.resetDots());
+
+                document.querySelectorAll('.template-item').forEach(item => {
+                    item.addEventListener('click', (e) => this.selectTemplate(e.target.closest('.template-item').dataset.grid));
+                });
+
+                document.getElementById('imageInput').addEventListener('change', (e) => this.handleImageUpload(e));
+
+                window.addEventListener('resize', () => {
+                    this.setupCanvas(this.canvasGrid, this.ctxGrid);
+                    this.setupCanvas(this.canvasTrace, this.ctxTrace);
+                    this.resetDots();
+                });
+            }
+
+            switchMode(mode) {
+                // IMPORTANT FIX: Re-run setupCanvas *before* switching to ensure the dimensions are correct 
+                // for the new active panel that might have been hidden.
+                this.setupCanvas(this.canvasGrid, this.ctxGrid);
+                this.setupCanvas(this.canvasTrace, this.ctxTrace);
+
+                this.currentMode = mode;
+
+                document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector(`.mode-tab[data-mode="${mode}"]`).classList.add('active');
+
+                document.getElementById('grid-controls').classList.toggle('hidden', mode !== 'grid');
+                document.getElementById('trace-controls').classList.toggle('hidden', mode !== 'trace');
+                document.getElementById('grid-panel').classList.toggle('hidden', mode !== 'grid');
+                document.getElementById('trace-panels').classList.toggle('hidden', mode !== 'trace');
+
+                this.activeCanvas = mode === 'grid' ? this.canvasGrid : this.canvasTrace;
+                this.activeCtx = mode === 'grid' ? this.ctxGrid : this.ctxTrace;
+
+                this.removeCanvasEvents(this.canvasGrid);
+                this.removeCanvasEvents(this.canvasTrace);
+                this.addCanvasEvents(this.activeCanvas);
+
+                // Initialize the new mode's canvas and draw content
+                if (mode === 'grid') {
+                    // Re-calculate and draw grid using the now-correct canvas size
+                    this.selectTemplate(this.selectedGrid);
+                } else if (mode === 'trace' && this.originalImage) {
+                    this.processImage(this.originalImage);
+                } else {
+                    this.clearDrawing();
+                }
+
+                document.getElementById('resetDotsBtn').textContent = mode === 'grid' ? 'Reset Grid' : 'Reset Dots';
+            }
+
+            addCanvasEvents(canvas) {
+                canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                canvas.addEventListener('mousemove', this.draw.bind(this));
+                canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+            }
+
+            removeCanvasEvents(canvas) {
+                canvas.removeEventListener('mousedown', this.startDrawing.bind(this));
+                canvas.removeEventListener('mousemove', this.draw.bind(this));
+                canvas.removeEventListener('mouseup', this.stopDrawing.bind(this));
+                canvas.removeEventListener('mouseout', this.stopDrawing.bind(this));
+            }
+
+            selectTool(tool) {
+                this.tool = tool;
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                const targetBtn = document.querySelector(`.tool-btn[data-tool="${tool}"]`);
+                if (targetBtn) targetBtn.classList.add('active');
+            }
+
+            // --- Drawing Logic (Unified) ---
+
+            startDrawing(e) {
+                this.isDrawing = true;
+                const rect = this.activeCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                this.activeCtx.beginPath();
+                this.activeCtx.moveTo(x, y);
+            }
+
+            draw(e) {
+                if (!this.isDrawing) return;
+
+                const rect = this.activeCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                this.activeCtx.lineWidth = this.size;
+                this.activeCtx.lineCap = 'round';
+                this.activeCtx.lineJoin = 'round';
+
+                if (this.tool === 'draw') {
+                    this.activeCtx.globalCompositeOperation = 'source-over';
+                    this.activeCtx.strokeStyle = this.color;
+                } else if (this.tool === 'erase') {
+                    this.activeCtx.globalCompositeOperation = 'destination-out';
+                    this.activeCtx.strokeStyle = 'rgba(255, 255, 255, 1)';
+                }
+
+                this.activeCtx.lineTo(x, y);
+                this.activeCtx.stroke();
+            }
+
+            stopDrawing() {
+                if (this.isDrawing) {
+                    this.isDrawing = false;
+                    this.activeCtx.beginPath();
+
+                    if (this.currentMode === 'trace' && this.dotsImageData) {
+                        this.restoreDots();
+                    }
+                }
+            }
+
+            clearCanvas() {
+                this.activeCtx.clearRect(0, 0, this.activeCanvas.width, this.activeCanvas.height);
+                this.activeCtx.fillStyle = '#000000';
+                this.activeCtx.fillRect(0, 0, this.activeCanvas.width, this.activeCanvas.height);
+            }
+
+            clearDrawing() {
+                this.clearCanvas();
+                if (this.currentMode === 'grid') {
+                    this.drawDots(this.gridDots);
+                } else if (this.currentMode === 'trace') {
+                    this.drawDots(this.traceDots);
+                }
+            }
+
+            resetDots() {
+                // Ensure canvas size is re-evaluated first, in case of resizing
+                this.setupCanvas(this.activeCanvas, this.activeCtx);
+
+                if (this.currentMode === 'grid') {
+                    this.selectTemplate(this.selectedGrid);
+                } else if (this.currentMode === 'trace') {
+                    if (this.originalImage) {
+                        this.processImage(this.originalImage);
+                    } else {
+                        this.drawDots(this.traceDots);
+                    }
+                }
+            }
+
+            download() {
+                const link = document.createElement('a');
+                link.download = `kolam-${this.currentMode}-${new Date().getTime()}.png`;
+                link.href = this.activeCanvas.toDataURL('image/png');
+                link.click();
+            }
+
+            // --- Dot Drawing Logic (Shared) ---
+
+            drawDots(dots) {
+                this.clearCanvas();
+                const ctx = this.activeCtx;
+                const canvas = this.activeCanvas;
+
+                if (dots.length === 0) {
+                    ctx.fillStyle = '#6e7681';
+                    ctx.font = '20px Segoe UI';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.currentMode === 'grid' ? 'Select a grid size.' : 'No dots found or image loaded.', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
+
+                ctx.fillStyle = '#f97583';
+                ctx.strokeStyle = '#c95163';
+                ctx.lineWidth = 1;
+
+                let dotRadius;
+                if (this.currentMode === 'grid') {
+                    // A better way to calculate dot radius based on density/size
+                    const maxDots = Math.max(Math.sqrt(dots.length), 1);
+                    dotRadius = Math.max(2, Math.min(4, 30 / maxDots));
+                } else {
+                    dotRadius = 4;
+                }
+
+                dots.forEach(dot => {
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+
+                if (this.currentMode === 'trace') {
+                    this.dotsImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            restoreDots() {
+                this.activeCtx.globalCompositeOperation = 'source-over';
+                const currentImageData = this.activeCtx.getImageData(0, 0, this.activeCanvas.width, this.activeCanvas.height);
+                const dotData = this.dotsImageData.data;
+                const currentData = currentImageData.data;
+
+                for (let i = 0; i < dotData.length; i += 4) {
+                    if (dotData[i + 3] > 0 && !(dotData[i] === 0 && dotData[i + 1] === 0 && dotData[i + 2] === 0)) {
+                        currentData[i] = dotData[i];
+                        currentData[i + 1] = dotData[i + 1];
+                        currentData[i + 2] = dotData[i + 2];
+                        currentData[i + 3] = dotData[i + 3];
+                    }
+                }
+
+                this.activeCtx.putImageData(currentImageData, 0, 0);
+            }
+
+
+            // --- Grid Draw Mode Specifics (Simplified) ---
+
+            selectTemplate(grid) {
+                document.querySelectorAll('.template-item').forEach(item => item.classList.remove('active'));
+                const newActive = document.querySelector(`[data-grid="${grid}"].template-item`);
+                if (newActive) newActive.classList.add('active');
+
+                this.selectedGrid = grid;
+
+                // FIX: Ensure canvas dimensions are set correctly before generating grid pattern,
+                // and before using the dimensions in generateGridPattern.
+                this.setupCanvas(this.canvasGrid, this.ctxGrid);
+
+                this.gridDots = this.generateGridPattern(grid);
+
+                if (this.currentMode === 'grid') {
+                    this.drawDots(this.gridDots);
+                }
+            }
+
+            generateGridPattern(grid) {
+                const dots = [];
+                const [rows, cols] = grid.split('x').map(n => parseInt(n));
+
+                const padding = 20;
+                const drawWidth = this.canvasGrid.width - 2 * padding;
+                const drawHeight = this.canvasGrid.height - 2 * padding;
+
+                const hSpace = cols > 1 ? drawWidth / (cols - 1) : 0;
+                const vSpace = rows > 1 ? drawHeight / (rows - 1) : 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const x = padding + (c * hSpace);
+                        const y = padding + (r * vSpace);
+                        dots.push({ x: x, y: y });
+                    }
+                }
+                return dots;
+            }
+
+            // --- Image Trace Mode Specifics (RE-INTEGRATED DOT LOGIC) ---
+
+            handleImageUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.originalImage = img;
+                        this.processImage(img);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            loadImageFromUrl(url) {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+
+                img.onload = () => {
+                    this.originalImage = img;
+                    if (this.currentMode !== 'trace') {
+                        this.switchMode('trace');
+                    }
+                    this.processImage(img);
+                };
+                img.onerror = () => {
+                    console.error("Could not load image from URL:", url);
+                    // Improved: Use a user-facing alert
+                    alert(`Error loading image from URL: ${url}. Please check the URL or use the upload button.`);
+                };
+                img.src = url;
+            }
+
+            processImage(img) {
+                // Display original image in the reference panel
+                const container = document.getElementById('originalContainer');
+                container.innerHTML = '';
+                const imgElement = document.createElement('img');
+                imgElement.src = img.src;
+                imgElement.style.maxWidth = '100%';
+                imgElement.style.maxHeight = '100%';
+                imgElement.style.objectFit = 'contain';
+                container.appendChild(imgElement);
+
+                // FIX: Ensure the tracing canvas dimensions are set correctly 
+                // BEFORE dot extraction (which uses canvasTrace.width/height for scaling) 
+                // and drawing. This forces a correct layout calculation.
+                this.setupCanvas(this.canvasTrace, this.ctxTrace);
+
+                // Extract dots and draw them on the canvas
+                this.traceDots = this.extractDots(img);
+                if (this.currentMode === 'trace') {
+                    this.drawDots(this.traceDots);
+                }
+            }
+
+            extractDots(img) {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                tempCtx.drawImage(img, 0, 0);
+
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+                return this.compute_dot_positions_js(imageData);
+            }
+
+            compute_dot_positions_js(imageData) {
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = imageData.data;
+
+                const grayscale = new Array(width * height);
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+                    grayscale[i / 4] = gray;
+                }
+
+                const binary = new Array(width * height);
+                for (let i = 0; i < grayscale.length; i++) {
+                    binary[i] = grayscale[i] < 127 ? 255 : 0;
+                }
+
+                const contours = this.findContours(binary, width, height);
+
+                const areas = contours.map(cnt => this.contourArea(cnt)).filter(area => area > 10);
+                if (areas.length === 0) return [];
+
+                areas.sort((a, b) => a - b);
+                const median = areas[Math.floor(areas.length / 2)];
+
+                const dots = [];
+                for (const contour of contours) {
+                    const area = this.contourArea(contour);
+                    if (area > 0.3 * median && area < 2.5 * median) {
+                        const moments = this.calculateMoments(contour);
+                        if (moments.m00 !== 0) {
+                            const cx = Math.round(moments.m10 / moments.m00);
+                            const cy = Math.round(moments.m01 / moments.m00);
+
+                            const margin = Math.min(width, height) * 0.05;
+                            if (cx > margin && cx < width - margin && cy > margin && cy < height - margin) {
+                                const canvasX = (cx / width) * this.canvasTrace.width;
+                                const canvasY = (cy / height) * this.canvasTrace.height;
+                                dots.push({ x: canvasX, y: canvasY });
+                            }
+                        }
+                    }
+                }
+
+                return this.removeDuplicateDots(dots);
+            }
+
+            findContours(binary, width, height) {
+                const visited = new Array(width * height).fill(false);
+                const contours = [];
+
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const idx = y * width + x;
+                        if (binary[idx] === 255 && !visited[idx]) {
+                            const contour = this.floodFill(binary, visited, x, y, width, height);
+                            if (contour.length > 0) {
+                                contours.push(contour);
+                            }
+                        }
+                    }
+                }
+
+                return contours;
+            }
+
+            floodFill(binary, visited, startX, startY, width, height) {
+                const stack = [{ x: startX, y: startY }];
+                const contour = [];
+
+                while (stack.length > 0) {
+                    const { x, y } = stack.pop();
+                    const idx = y * width + x;
+
+                    if (x < 0 || x >= width || y < 0 || y >= height || visited[idx] || binary[idx] !== 255) {
+                        continue;
+                    }
+
+                    visited[idx] = true;
+                    contour.push({ x, y });
+
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            if (dx === 0 && dy === 0) continue;
+                            stack.push({ x: x + dx, y: y + dy });
+                        }
+                    }
+                }
+
+                return contour;
+            }
+
+            contourArea(contour) {
+                if (contour.length < 3) return 0;
+
+                let area = 0;
+                for (let i = 0; i < contour.length; i++) {
+                    const j = (i + 1) % contour.length;
+                    area += contour[i].x * contour[j].y;
+                    area -= contour[j].x * contour[i].y;
+                }
+                return Math.abs(area) / 2;
+            }
+
+            calculateMoments(contour) {
+                let m00 = 0, m10 = 0, m01 = 0;
+
+                for (const point of contour) {
+                    m00 += 1;
+                    m10 += point.x;
+                    m01 += point.y;
+                }
+
+                return { m00, m10, m01 };
+            }
+
+            removeDuplicateDots(dots) {
+                const threshold = 20;
+                const unique = [];
+
+                for (const dot of dots) {
+                    const exists = unique.some(existing =>
+                        Math.abs(existing.x - dot.x) < threshold && Math.abs(existing.y - dot.y) < threshold
+                    );
+                    if (!exists) unique.push(dot);
+                }
+                return unique;
+            }
+        }
+
+        // Initialize app when DOM is loaded
+        // Note: The class constructor now handles the DOMContentLoaded and setTimeout for initialization
+        new UnifiedKolamApp();
+    </script>
+</body>
+
+</html>
