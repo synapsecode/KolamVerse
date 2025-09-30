@@ -211,13 +211,13 @@ def draw_kolam_web(seed="FBFBFBFB", depth=1, step=20, angle=0, img_size=(800, 80
     
     for ch in state:
         if ch == 'F':
-            t.color('green' if is_colorful else 'white')
+            t.color("#07DA07" if is_colorful else 'white')
             t.pensize(3)
             t.start_new_shape()  # Start tracking for potential enclosed region
             t.fd(step)
             
         elif ch == 'A':
-            t.color('blue' if is_colorful else 'white')
+            t.color("#009DFF" if is_colorful else 'white')
             t.pensize(3)
             
             dot_positions.append(t.position())
@@ -317,7 +317,7 @@ def render_to_image(turtle, img_size=(800, 800), padding=50):
         end_x, end_y = transform_point(*end_pos)
         
         # Scale line width
-        scaled_width = max(1, int(width * scale * 0.3))
+        scaled_width = max(1, int(width * scale * 0.6))
         
         draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=scaled_width)
     
@@ -371,7 +371,7 @@ def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_si
     # Execute L-system commands and record steps
     for ch in state:
         if ch == 'F':
-            color = 'green' if is_colorful else 'white'
+            color = '#00FF00' if is_colorful else 'white'
             start_pos = (t.x, t.y)
             t.fd(step)
             end_pos = (t.x, t.y)
@@ -385,7 +385,7 @@ def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_si
             })
             
         elif ch == 'A':
-            color = 'blue' if is_colorful else 'white'
+            color = "#1B95EC" if is_colorful else 'white'
             
             # Store position for dot (same as main draw function)
             dot_positions.append(t.position())
@@ -529,7 +529,7 @@ def generate_drawing_steps(seed="FBFBFBFB", depth=1, step=20, angle=0, canvas_si
                         step['start']['y'] = step['start']['y'] * scale + offset_y
                         step['end']['x'] = step['end']['x'] * scale + offset_x
                         step['end']['y'] = step['end']['y'] * scale + offset_y
-                        step['width'] = max(1, int(step['width'] * scale * 0.3))
+                        step['width'] = max(1, int(step['width'] * scale * 0.6))
     
     # Add dots at the end
     # Process basic dot positions (from A and B commands)
