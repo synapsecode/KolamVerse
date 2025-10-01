@@ -1,17 +1,44 @@
 async function generateKolam() {
-  const seed = document.getElementById('prompt').value.trim();
-  if(!seed){
-    alert('Please enter a seed first.');
-    return;
-  }
-  const ts = Date.now();
-  const url = `/drawkolam?seed=${encodeURIComponent(seed)}&depth=2&ts=${ts}`;
-  const img = document.getElementById('kolamImage');
-  img.src = url;
-  img.classList.remove('hidden');
-  document.getElementById('placeholderText').classList.add('hidden');
-  await getSeedNarration(seed);
-}
+      const seed = document.getElementById("prompt").value.trim();
+      if (!seed) {
+        alert("Please enter a seed first.");
+        return;
+      }
+
+      // Clear previous animation and hide placeholder immediately
+      stopAnimation();
+      clearCanvas();
+      document.getElementById('placeholderText').style.display = 'none';
+      
+      try {
+        // Get drawing steps from backend for animation
+        const response = await fetch(`/drawkolam_steps?seed=${encodeURIComponent(seed)}&depth=2`);
+        if (!response.ok) {
+          throw new Error('Failed to generate kolam steps');
+        }
+        
+        const data = await response.json();
+        drawingSteps = data.steps;
+        currentStep = 0;
+        
+        console.log('Drawing steps loaded:', drawingSteps.length);
+        
+        // Update progress and start animation
+        updateProgressInfo();
+        startAnimation();
+        
+        // Also get narration if the function exists
+        if (typeof getSeedNarration === 'function') {
+          await getSeedNarration(seed);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate kolam animation');
+        // Show placeholder again if there's an error
+        document.getElementById('placeholderText').style.display = 'block';
+      }
+    }
 
 async function getSeedNarration(seed){
   const panel = document.getElementById('narrationPanel');

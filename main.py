@@ -170,6 +170,26 @@ def drawkolam(seed: str = "FBFBFBFB", depth: int = 1):
     img_bytes = draw_kolam_web_bytes(seed=seed, depth=depth)
     return Response(content=img_bytes, media_type="image/png")
 
+@app.get("/drawkolam_steps")
+def drawkolam_steps(seed: str = "FBFBFBFB", depth: int = 1):
+    # Generate step-by-step drawing instructions for animation
+    from kolamgen_web import generate_drawing_steps
+    steps = generate_drawing_steps(seed=seed, depth=depth)
+    return JSONResponse({"steps": steps})
+
+
+def load_ai_prompt_template():
+    """Load the AI prompt template from external file"""
+    try:
+        with open("prompt_seed_instructions.txt", "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        # Fallback prompt if file is missing
+        return """You are an expert designer of Kolam art using a specific L-system. Convert the user's description into a simple L-system axiom using only F, A, B, C commands. Only output the final axiom string.
+
+User Description: "{user_prompt}"
+Axiom:"""
+
 @app.post("/generate_seed_from_prompt")
 async def generate_seed_from_prompt(payload: dict = Body(...)):
     """Generate a seed string via Gemini from a natural language prompt."""
