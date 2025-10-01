@@ -1,9 +1,12 @@
 import argparse
+import os
 import cv2
 import numpy as np
 import pandas as pd
 from skimage.morphology import skeletonize
 import networkx as nx
+
+from preprocess import preprocess_kolam
 
 def skeleton_to_edges(skel):
     skel = (skel > 0).astype(np.uint8)
@@ -38,6 +41,9 @@ def make_eulerian(G):
     return G
 
 def image_to_kolam_csv(image_path, csv_path):
+    # PreProcess Image & Replace Path
+    image_path = preprocess_kolam(image_path)
+
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
     skel = skeletonize(binary > 0)
@@ -71,6 +77,9 @@ def image_to_kolam_csv(image_path, csv_path):
 
     pd.DataFrame(out).to_csv(csv_path, index=False)
     print(f"✅ Saved {csv_path} as Eulerian single stroke ({len(points)} points)")
+
+    # Delete the File
+    os.remove(image_path)
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

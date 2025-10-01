@@ -1,7 +1,7 @@
+import os
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
-import numpy as np
 
-def preprocess_image(image_path, output_path=None, target_size=(128, 128), threshold=128):
+def preprocess_kolam(image_path, target_size=(300, 300), threshold=128):
     # Load image
     img = Image.open(image_path).convert("L")  # grayscale
     
@@ -16,9 +16,6 @@ def preprocess_image(image_path, output_path=None, target_size=(128, 128), thres
     if bg_pixel > 128:
         img = ImageOps.invert(img)
     
-    # --- 4. Thicken lines slightly (better connectivity for kolam2csv) ---
-    img = img.filter(ImageFilter.MaxFilter(size=3))
-    
     # --- 5. Resize ---
     img = img.resize(target_size, Image.Resampling.LANCZOS)
     
@@ -28,12 +25,15 @@ def preprocess_image(image_path, output_path=None, target_size=(128, 128), thres
     # Optional: slight brightness adjust if lines look too faint
     img = ImageEnhance.Brightness(img).enhance(0.8)
     
-    # Save if needed
-    if output_path:
-        img.save(output_path)
+    # --- Save with new name ---
+    dx = os.path.dirname(image_path)
+    base, ext = os.path.splitext(os.path.basename(image_path))  # safer split
     
-    return img
+    # remove original image (optional, careful!)
+    if os.path.exists(image_path):
+        os.remove(image_path)
+    
+    out_path = os.path.join(dx, f"{base}_preprocessed{ext}")
+    img.save(out_path)
 
-# Example
-processed = preprocess_image("a.png", "output.jpg")
-processed.show()
+    return out_path

@@ -78,9 +78,6 @@ async def upload_kolam(
     csv_path = os.path.join(STATIC_DIR, csv_filename)
     image_to_kolam_csv(file_path, csv_path)
 
-    # Delete the Image
-    os.remove(file_path)
-
     # TODO: REMOVE CSV
 
     return {"csv_file": csv_filename}
